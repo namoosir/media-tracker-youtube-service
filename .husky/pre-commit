@@ -20,6 +20,3 @@
 #echo 'Husky.Net is awesome!'
 
 dotnet husky run
-
-echo 'Successfully ran csharpier\!'
-
