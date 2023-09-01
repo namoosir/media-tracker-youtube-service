@@ -30,7 +30,7 @@ namespace MediaTrackerYoutubeService
                 opt => opt.UseSqlServer(Configuration.GetConnectionString("DBConnectionString"))
             );
 
-            services.AddGraphQLServer().AddQueryType<Query>();
+            services.AddGraphQLServer().AddQueryType<Query>().AddProjections().AddFiltering();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
