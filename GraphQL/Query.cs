@@ -8,9 +8,10 @@ namespace MediaTrackerYoutubeService.GraphQL
         [UseDbContext(typeof(AppDbContext))]
         [UseProjection]
         [UseFiltering]
-        public IQueryable<Platform> GetPlatform([ScopedService] AppDbContext context)
+        [UseSorting]
+        public IQueryable<UserVideo> GetUserVideo([ScopedService] AppDbContext context)
         {
-            return context.Platforms;
+            return context.UserVideos;
         }
     }
 }

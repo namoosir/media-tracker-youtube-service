@@ -8,6 +8,12 @@ namespace MediaTrackerYoutubeService.Data
         public AppDbContext(DbContextOptions options)
             : base(options) { }
 
-        public DbSet<Platform> Platforms { get; set; }
+        public DbSet<UserVideo> UserVideos { get; set; }
+
+        //good idea to implement this when creating multiple models with complex relationships
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

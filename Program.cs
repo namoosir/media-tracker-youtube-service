@@ -1,26 +1,72 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using MediaTrackerYoutubeService.Data;
+using MediaTrackerYoutubeService.GraphQL;
+using Microsoft.EntityFrameworkCore;
 
-namespace MediaTrackerYoutubeService
+var builder = WebApplication.CreateBuilder(args);
+
+// builder.Services.AddCors();
+
+// Add services to the container.
+builder.Services.AddPooledDbContextFactory<AppDbContext>(
+    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DBConnectionString"))
+);
+
+builder.Services
+    .AddGraphQLServer()
+    .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
+    .AddQueryType<Query>()
+    .AddMutationType<Mutation>()
+    .AddSubscriptionType<Subscription>()
+    .AddProjections()
+    .AddFiltering()
+    .AddSorting()
+    // .AddRedisSubscriptions((sp) => ConnectionMultiplexer.Connect("localhost:5000")); /TODO: LOOK INTO REDIS FOR THIS
+    .AddInMemorySubscriptions();
+
+// builder.Services.AddSingleton(builder.Configuration.GetSection("GoogleOauth"));
+
+// builder.Services.AddControllers();
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// builder.Services.AddCors(options =>
+//     {
+//         options.AddPolicy("AllowSpecificOrigins",
+//             builder =>
+//             {
+//                 builder
+//                     .AllowAnyOrigin()
+//                     .AllowAnyHeader()
+//                     .AllowAnyMethod();
+//             });
+//     });
+
+// builder.Services.AddEndpointsApiExplorer();
+// builder.Services.AddSwaggerGen();
+// builder.Services.AddAutoMapper(typeof(Program).Assembly);
+// builder.Services.AddHttpClient();
+// builder.Services.AddScoped<IPlatformConnectionService, PlatformConnectionService>();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+    app.UseDeveloperExceptionPage();
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-    }
+    // app.UseSwagger();
+    // app.UseSwaggerUI();
 }
+
+app.UseWebSockets();
+app.UseRouting();
+
+// app.UseCors("AllowSpecificOrigins");
+// app.UseHttpsRedirection();
+
+// app.UseAuthorization();
+
+// app.MapControllers();
+
+app.MapGraphQL();
+app.MapGraphQLVoyager("graphql-voyager");
+app.Run();
