@@ -12,7 +12,7 @@ public class FetchYoutubeDataService : IFetchYoutubeDataService
         _httpClient = httpClient;
     }
 
-    public Task<ServiceResponse<List<UserYoutubeVideo>>> FetchYoutubeVideos(
+    public async Task<ServiceResponse<List<UserYoutubeVideo>>> FetchLikedVideos(
         UserInformation userInformation
     )
     {
