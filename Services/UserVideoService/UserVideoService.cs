@@ -1,6 +1,6 @@
 using MediaTrackerYoutubeService.Data;
 using MediaTrackerYoutubeService.Models;
-using MediaTrackerYoutubeService.Models.Utils;
+using MediaTrackerYoutubeService.Schemas;
 using Microsoft.EntityFrameworkCore;
 
 namespace MediaTrackerYoutubeService.Services.UserVideoService;

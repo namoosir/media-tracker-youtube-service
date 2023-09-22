@@ -1,5 +1,5 @@
 using MediaTrackerYoutubeService.Models;
-using MediaTrackerYoutubeService.Models.Utils;
+using MediaTrackerYoutubeService.Schemas;
 
 namespace MediaTrackerYoutubeService.Services.FetchYoutubeDataService;
 
@@ -14,8 +14,8 @@ public class FetchYoutubeDataService : IFetchYoutubeDataService
         _httpClient = httpClient;
     }
 
-    public async Task<ServiceResponse<List<UserYoutubeVideo>>> FetchLikedVideos(UserInformation userInformation)
-    {
-        throw new NotImplementedException();
-    }
+    // public async Task<ServiceResponse<List<UserYoutubeVideo>>> FetchLikedVideos(UserInformation userInformation)
+    // {
+    //     throw new NotImplementedException();
+    // }
 }

@@ -8,7 +8,7 @@ namespace MediaTrackerYoutubeService.Data
         public AppDbContext(DbContextOptions options)
             : base(options) { }
 
-        public DbSet<UserVideo> UserVideos { get; set; }
+        // public DbSet<UserVideo> UserVideos { get; set; }
 
         //good idea to implement this when creating multiple models with complex relationships
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -16,25 +16,25 @@ namespace MediaTrackerYoutubeService.Data
             base.OnModelCreating(modelBuilder);
         }
 
-        public override int SaveChanges()
-        {
-            var entries = ChangeTracker
-                .Entries()
-                .Where(e => e.Entity is BaseEntity && (
-                        e.State == EntityState.Added
-                        || e.State == EntityState.Modified));
+        // public override int SaveChanges()
+        // {
+        //     var entries = ChangeTracker
+        //         .Entries()
+        //         .Where(e => e.Entity is BaseEntity && (
+        //                 e.State == EntityState.Added
+        //                 || e.State == EntityState.Modified));
 
-            foreach (var entityEntry in entries)
-            {
-                ((BaseEntity)entityEntry.Entity).UpdatedDate = DateTime.Now;
+        //     foreach (var entityEntry in entries)
+        //     {
+        //         ((BaseEntity)entityEntry.Entity).UpdatedDate = DateTime.Now;
 
-                if (entityEntry.State == EntityState.Added)
-                {
-                    ((BaseEntity)entityEntry.Entity).CreatedDate = DateTime.Now;
-                }
-            }
+        //         if (entityEntry.State == EntityState.Added)
+        //         {
+        //             ((BaseEntity)entityEntry.Entity).CreatedDate = DateTime.Now;
+        //         }
+        //     }
 
-            return base.SaveChanges();
-        }
+        //     return base.SaveChanges();
+        // }
     }
 }
