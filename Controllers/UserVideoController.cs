@@ -39,7 +39,7 @@ public class UserVideoController : ControllerBase
         //exchange service
         var userInformation = await _authTokenExchangeService.YoutubeAuthTokenExchange(userId);
         //stuff = fetch service
-        var fetchedData = await _fetchYoutubeDataService.FetchYoutubeVideos(userInformation.Data);
+        var fetchedData = await _fetchYoutubeDataService.FetchLikedVideos(userInformation.Data);
         //process stuff
         var processedData = await _processYoutubeDataService.ProcessYoutubeData(fetchedData.Data);
         //save to db (stuff)
