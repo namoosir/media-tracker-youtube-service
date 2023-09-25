@@ -9,6 +9,10 @@ namespace MediaTrackerYoutubeService.Data
             : base(options) { }
 
         // public DbSet<UserVideo> UserVideos { get; set; }
+        public DbSet<Channel> Channels { get; set; }
+        public DbSet<Playlist> Playlists { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Video> Videos { get; set; }
 
         //good idea to implement this when creating multiple models with complex relationships
         protected override void OnModelCreating(ModelBuilder modelBuilder)

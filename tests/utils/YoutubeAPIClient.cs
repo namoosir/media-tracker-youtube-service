@@ -1,20 +1,20 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
-using MediaTrackerYoutubeService.Utils;
-using MediaTrackerYoutubeService.Schemas.YoutubeAPIResource;
+using MediaTrackerYoutubeService.Utils.Youtube;
+using MediaTrackerYoutubeService.Schemas;
     
 [TestClass]
 public class YoutubeAPIClientTests
 {
-    private const string BearerToken = "ya29.a0AfB_byALVkjscHiIORp7JdS5IgD3jG8AqRN6HrGS-DnfgYTsJ-JKJADnGuV4lw4PMipy1nfrQJF4cEqTEP1AxmhNL2tetgOum8zAkpDm5Qb1t2mJVez2f2GqThyp2_n6paACTziT-MxiZzA6Cqhq2YsoT6Zh7aXRYOM5aCgYKAVkSARISFQGOcNnC8P4WvjnveTKiZWq6a-cvsw0171";
-    private const string ApiKey = "AIzaSyBQTCRnQig9KQgzyMqpafkPGeBMKc-4i8g";
+    private const string BearerToken = "";
+    private const string ApiKey = "";
 
     [TestMethod]
     public async Task GetLikedVideos_ValidRequest_ReturnsResponse()
     {
         YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
 
-        PlaylistItemResponse response = await client.GetLikedVideos();
+        YoutubeAPIResponse response = await client.GetRatedVideos(YoutubeAPIClient.Rating.Like);
 
         Assert.IsNotNull(response);
     }
@@ -24,15 +24,48 @@ public class YoutubeAPIClientTests
     {
         YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
 
-        PlaylistResponse response = await client.GetMyPlaylists();
+        YoutubeAPIResponse response = await client.GetMyPlaylists();
 
         Assert.IsNotNull(response);
     }
 
     [TestMethod]
-    public async Task istrue()
+    public async Task GetMyPlaylistsItems()
     {
-        Assert.IsTrue(true);
+        YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
+
+        YoutubeAPIResponse response = await client.GetMyPlaylistItems("PLBiSPTHLp980MPLjeaenyI_fo-VawsFwO");
+
+        Assert.IsNotNull(response);
     }
-    
+
+    [TestMethod]
+    public async Task GetMySubscriptions()
+    {
+        YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
+
+        YoutubeAPIResponse response = await client.GetSubscriptions();
+
+        Assert.IsNotNull(response);
+    }
+
+    [TestMethod]
+    public async Task GetChannels()
+    {
+        YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
+
+        YoutubeAPIResponse response = await client.GetChannels(new List<string>{"UCrTW8WZTlOZMvvn_pl1Lpsg","UCmDTrq0LNgPodDOFZiSbsww","UCRD2CerUvgKHQ"});
+
+        Assert.IsNotNull(response);
+    }
+
+    [TestMethod]
+    public async Task GetMyVideos()
+    {
+        YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
+
+        YoutubeAPIResponse response = await client.GetVideos(new List<string>{"i3AkTO9HLXo","coFIEH3vXPw","m_MQYyJpIjg"});
+
+        Assert.IsNotNull(response);
+    }    
 }

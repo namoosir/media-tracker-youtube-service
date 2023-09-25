@@ -8,12 +8,12 @@ namespace MediaTrackerYoutubeService.Models
     {
         [Key]
         [GraphQLDescription("Unique identifier for user (Internal)")]
-        public string UserId { get; set; }
+        public required string UserId { get; set; }
 
         [GraphQLDescription("Channels that the user is subscribed to")]
-        public ICollection<Channel> SubscribedChannels { get; set; }
+        public required ICollection<Channel> SubscribedChannels { get; set; }
 
         [GraphQLDescription("Video playlists created by the user")]
-        public ICollection<Playlist> VideoPlaylists { get; set; }
+        public required ICollection<Playlist> VideoPlaylists { get; set; }
     }
 }

@@ -46,6 +46,21 @@ public class UserVideoController : ControllerBase
     //     // var storeStatus = await _storeYoutubeDataService.StoreYoutubeData(processedData.Data);
     //     // //return OK
     //     // return Ok(storeStatus);
+    // [HttpPost]
+    // public async Task<
+    //     ActionResult<ServiceResponse<string>>
+    // > AuthenticateFetchProcessStoreYoutubeData(int userId)
+    // {
+    //     //exchange service
+    //     var userInformation = await _authTokenExchangeService.YoutubeAuthTokenExchange(userId);
+    //     //stuff = fetch service
+    //     var fetchedData = await _fetchYoutubeDataService.FetchLikedVideos(userInformation.Data);
+    //     //process stuff
+    //     var processedData = await _processYoutubeDataService.ProcessYoutubeData(fetchedData.Data);
+    //     //save to db (stuff)
+    //     var storeStatus = await _storeYoutubeDataService.StoreYoutubeData(processedData.Data);
+    //     //return OK
+    //     return Ok(storeStatus);
 
     //     //create the subscription thing maybe??
     // }

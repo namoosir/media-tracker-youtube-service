@@ -7,14 +7,14 @@ namespace MediaTrackerYoutubeService.Models
     {
         [Key]
         [GraphQLDescription("Unique identifier for playlist according to Youtube (External)")]
-        public string YoutubeId { get; set; }
+        public required string YoutubeId { get; set; }
 
         [GraphQLDescription("Unique identifier for user who created playlist (Internal)")]
-        public string UserId { get; set; }
+        public required string UserId { get; set; }
 
         [GraphQLDescription("Videos comprising the playlist")]
-        public ICollection<Video> Videos { get; set; }
+        public required ICollection<Video> Videos { get; set; }
         
-
+        public required string ETag { get; set; }
     }
 }
