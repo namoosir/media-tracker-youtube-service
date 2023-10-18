@@ -5,6 +5,7 @@ using MediaTrackerYoutubeService.Services.FetchYoutubeDataService;
 using MediaTrackerYoutubeService.Services.ProcessYoutubeDataService;
 using MediaTrackerYoutubeService.Services.StoreYoutubeDataService;
 using MediaTrackerYoutubeService.Services.UserVideoService;
+using MediaTrackerYoutubeService.Middleware;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +20,7 @@ builder.Services.AddPooledDbContextFactory<AppDbContext>(
 builder.Services
     .AddGraphQLServer()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
-    // .AddQueryType<Query>()
+    .AddQueryType<Query>()
     // .AddMutationType<Mutation>()
     // .AddSubscriptionType<Subscription>()
     .AddProjections()
@@ -57,6 +58,8 @@ builder.Services.AddScoped<IProcessYoutubeDataService, ProcessYoutubeDataService
 builder.Services.AddScoped<IStoreYoutubeDataService, StoreYoutubeDataService>();
 
 var app = builder.Build();
+
+app.UseMiddleware<QueryInspectionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

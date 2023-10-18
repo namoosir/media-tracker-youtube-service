@@ -8,7 +8,6 @@ namespace MediaTrackerYoutubeService.Data
         public AppDbContext(DbContextOptions options)
             : base(options) { }
 
-        // public DbSet<UserVideo> UserVideos { get; set; }
         public DbSet<Channel> Channels { get; set; }
         public DbSet<Playlist> Playlists { get; set; }
         public DbSet<User> Users { get; set; }
@@ -20,25 +19,25 @@ namespace MediaTrackerYoutubeService.Data
             base.OnModelCreating(modelBuilder);
         }
 
-        // public override int SaveChanges()
-        // {
-        //     var entries = ChangeTracker
-        //         .Entries()
-        //         .Where(e => e.Entity is BaseEntity && (
-        //                 e.State == EntityState.Added
-        //                 || e.State == EntityState.Modified));
+        public override int SaveChanges()
+        {
+            var entries = ChangeTracker
+                .Entries()
+                .Where(e => e.Entity is BaseEntity && (
+                        e.State == EntityState.Added
+                        || e.State == EntityState.Modified));
 
-        //     foreach (var entityEntry in entries)
-        //     {
-        //         ((BaseEntity)entityEntry.Entity).UpdatedDate = DateTime.Now;
+            foreach (var entityEntry in entries)
+            {
+                ((BaseEntity)entityEntry.Entity).UpdatedAt = DateTime.Now;
 
-        //         if (entityEntry.State == EntityState.Added)
-        //         {
-        //             ((BaseEntity)entityEntry.Entity).CreatedDate = DateTime.Now;
-        //         }
-        //     }
+                if (entityEntry.State == EntityState.Added)
+                {
+                    ((BaseEntity)entityEntry.Entity).CreatedAt = DateTime.Now;
+                }
+            }
 
-        //     return base.SaveChanges();
-        // }
+            return base.SaveChanges();
+        }
     }
 }
