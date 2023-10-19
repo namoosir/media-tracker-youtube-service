@@ -38,27 +38,27 @@ public class YoutubeAPIClient
         private readonly string _apiKey;
         public Endpoints(string apiKey) => _apiKey = apiKey;
 
-        public string RatedVideos(string rating) => YoutubeAPIUrlBuilder.Build(
+        public string RatedVideos(string rating, string? pageToken) => YoutubeAPIUrlBuilder.Build(
                                                         YoutubeResource.Videos, 
-                                                        new Dictionary<string, string> {{"myRating", $"{rating}"}, {"key", _apiKey}},
+                                                        new Dictionary<string, string> {{"myRating", $"{rating}"}, {"key", _apiKey}, {"pageToken", pageToken}},
                                                         new List<string> {"snippet", "statistics"},
                                                         null);
 
-        public string Playlists() => YoutubeAPIUrlBuilder.Build(
+        public string Playlists(string? pageToken) => YoutubeAPIUrlBuilder.Build(
                                             YoutubeResource.Playlists,
-                                            new Dictionary<string, string> {{"mine", "true"}, {"key", _apiKey}},
+                                            new Dictionary<string, string> {{"mine", "true"}, {"key", _apiKey}, {"pageToken", pageToken}},
                                             null,
                                             null);
 
-        public string PlaylistItems(string playlistId) => YoutubeAPIUrlBuilder.Build(
+        public string PlaylistItems(string playlistId, string? pageToken) => YoutubeAPIUrlBuilder.Build(
                                                                 YoutubeResource.PlaylistItems,
-                                                                new Dictionary<string, string> {{"playlistId", playlistId}, {"key", _apiKey}},
+                                                                new Dictionary<string, string> {{"playlistId", playlistId}, {"key", _apiKey}, {"pageToken", pageToken}},
                                                                 new List<string> {"snippet", "contentDetails"},
                                                                 null);
 
-        public string Subscriptions() => YoutubeAPIUrlBuilder.Build(
+        public string Subscriptions(string? pageToken) => YoutubeAPIUrlBuilder.Build(
                                                                 YoutubeResource.Subscriptions, 
-                                                                new Dictionary<string, string> {{"mine", "true"}, {"key", _apiKey}}, 
+                                                                new Dictionary<string, string> {{"mine", "true"}, {"key", _apiKey}, {"pageToken", pageToken}}, 
                                                                 null,
                                                                 null);
 
@@ -77,29 +77,29 @@ public class YoutubeAPIClient
                                                         videoIds);
     }
 
-    public async Task<YoutubeAPIResponse> GetMyPlaylists()
+    public async Task<YoutubeAPIResponse> GetMyPlaylists(string nextPageToken = null)
     {
-        HttpResponseMessage response = await _httpClient.GetAsync(_endpoints.Playlists());
+        HttpResponseMessage response = await _httpClient.GetAsync(_endpoints.Playlists(nextPageToken));
         return await DeserializedResponse(response, YoutubeResource.Playlists);
     }
 
-    public async Task<YoutubeAPIResponse> GetMyPlaylistItems(string playlistId)
+    public async Task<YoutubeAPIResponse> GetMyPlaylistItems(string playlistId, string nextPageToken = null)
     {
-        HttpResponseMessage response = await _httpClient.GetAsync(_endpoints.PlaylistItems(playlistId));
+        HttpResponseMessage response = await _httpClient.GetAsync(_endpoints.PlaylistItems(playlistId, nextPageToken));
         return await DeserializedResponse(response, YoutubeResource.PlaylistItems);
     }
 
 
-    public async Task<YoutubeAPIResponse> GetRatedVideos(Rating rating)
+    public async Task<YoutubeAPIResponse> GetRatedVideos(Rating rating, string nextPageToken = null)
     {
         string strRating = (rating == Rating.Like) ? "like" : "dislike";
-        HttpResponseMessage response = await _httpClient.GetAsync(_endpoints.RatedVideos(strRating));
+        HttpResponseMessage response = await _httpClient.GetAsync(_endpoints.RatedVideos(strRating, nextPageToken));
         return await DeserializedResponse(response, YoutubeResource.Videos);
     }
 
-    public async Task<YoutubeAPIResponse> GetSubscriptions()
+    public async Task<YoutubeAPIResponse> GetSubscriptions(string nextPageToken = null)
     {
-        HttpResponseMessage response = await _httpClient.GetAsync(_endpoints.Subscriptions());
+        HttpResponseMessage response = await _httpClient.GetAsync(_endpoints.Subscriptions(nextPageToken));
         return await DeserializedResponse(response, YoutubeResource.Videos);
     }
 

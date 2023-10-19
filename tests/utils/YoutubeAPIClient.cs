@@ -2,12 +2,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using MediaTrackerYoutubeService.Utils.Youtube;
 using MediaTrackerYoutubeService.Schemas;
-    
+
+namespace MediaTrackerYoutubeService.Tests.Utils;
 [TestClass]
 public class YoutubeAPIClientTests
 {
-    private const string BearerToken = "";
-    private const string ApiKey = "";
+    private const string BearerToken = "ya29.a0AfB_byD6aXKmdp1ucFvLdIwqo09nsTXs7aR-NM-PFe19no8qCE3NHQLTVM6b5cFq-Xraku9153fnS63_kGsROcu22VqV48YHtFN60lLvRp8OP0fSDpI99HsfeAxGXqpPTJvLI3zxLqFD-KhtPtXRuk9srMvB90pg2grTaCgYKAbcSARASFQGOcNnCCB-nQcRSg14VWhoaKXxaGg0171";
+    private const string ApiKey = "AIzaSyCJ5a1wgdnM2RCSGybxP8bv-osZHziwNIA";
 
     [TestMethod]
     public async Task GetLikedVideos_ValidRequest_ReturnsResponse()
@@ -15,6 +16,16 @@ public class YoutubeAPIClientTests
         YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
 
         YoutubeAPIResponse response = await client.GetRatedVideos(YoutubeAPIClient.Rating.Like);
+
+        Assert.IsNotNull(response);
+    }
+
+    [TestMethod]
+    public async Task GetLikedVideosNextPage_ValidRequest_ReturnsResponse()
+    {
+        YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
+
+        YoutubeAPIResponse response = await client.GetRatedVideos(YoutubeAPIClient.Rating.Like, "CGQQAA");
 
         Assert.IsNotNull(response);
     }

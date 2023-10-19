@@ -19,9 +19,11 @@ public class YoutubeAPIUrlBuilder
 
         query["part"] = partString;
 
+        query["maxResults"] = "50";
+
         foreach (var key in queryParams.Keys)
         {
-            query[key] = queryParams[key];
+            if (queryParams[key] != null) query[key] = queryParams[key];
         }
 
         if (id is not null)
