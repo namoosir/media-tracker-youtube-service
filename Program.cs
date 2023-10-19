@@ -8,13 +8,16 @@ using MediaTrackerYoutubeService.Services.UserVideoService;
 using MediaTrackerYoutubeService.Middleware;
 using Microsoft.EntityFrameworkCore;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // builder.Services.AddCors();
 
 // Add services to the container.
 builder.Services.AddPooledDbContextFactory<AppDbContext>(
-    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DBConnectionString"))
+    options => options
+                .UseLazyLoadingProxies()
+                .UseSqlServer(builder.Configuration.GetConnectionString("DBConnectionString"))
 );
 
 builder.Services

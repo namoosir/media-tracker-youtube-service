@@ -12,9 +12,11 @@ namespace MediaTrackerYoutubeService.Models
         public required int UserId { get; set; }
 
         [GraphQLDescription("Channels that the user is subscribed to")]
-        public required ICollection<Channel> SubscribedChannels { get; set; }
+        public required virtual ICollection<Channel> SubscribedChannels { get; set; }
 
         [GraphQLDescription("Video playlists created by the user")]
-        public required ICollection<Playlist> VideoPlaylists { get; set; }
+        public required virtual ICollection<Playlist> VideoPlaylists { get; set; }
+
+        // public ... likedPlaylist
     }
 }

@@ -10,7 +10,7 @@ namespace MediaTrackerYoutubeService.Models
         public required string YoutubeId { get; set; }
 
         [GraphQLDescription("The channel to which this video belongs")]
-        public required Channel Channel { get; set; }
+        public required virtual Channel Channel { get; set; }
 
         [GraphQLDescription("The number of views this video has received")]
         public int? ViewCount { get; set; }
