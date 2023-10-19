@@ -1,9 +1,9 @@
 using MediaTrackerYoutubeService.Models;
-using MediaTrackerYoutubeService.Models.Utils;
+using MediaTrackerYoutubeService.Schemas;
 
 namespace MediaTrackerYoutubeService.Services.AuthTokenExchangeService;
 
 public interface IAuthTokenExchangeService
 {
-    Task<ServiceResponse<UserInformation>> YoutubeAuthTokenExchange(int userId);
+    Task<ServiceResponse<string>> YoutubeAuthTokenExchange(int userId);
 }

@@ -4,6 +4,7 @@ using MediaTrackerYoutubeService.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediaTrackerYoutubeService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231018223337_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,7 +63,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Channels", (string)null);
+                    b.ToTable("Channels");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Playlist", b =>
@@ -85,7 +88,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Playlists", (string)null);
+                    b.ToTable("Playlists");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.User", b =>
@@ -101,7 +104,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Video", b =>
@@ -144,7 +147,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("PlaylistYoutubeId");
 
-                    b.ToTable("Videos", (string)null);
+                    b.ToTable("Videos");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Channel", b =>

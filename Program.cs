@@ -5,7 +5,9 @@ using MediaTrackerYoutubeService.Services.FetchYoutubeDataService;
 using MediaTrackerYoutubeService.Services.ProcessYoutubeDataService;
 using MediaTrackerYoutubeService.Services.StoreYoutubeDataService;
 using MediaTrackerYoutubeService.Services.UserVideoService;
+using MediaTrackerYoutubeService.Middleware;
 using Microsoft.EntityFrameworkCore;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +15,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddPooledDbContextFactory<AppDbContext>(
-    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DBConnectionString"))
+    options => options
+                .UseLazyLoadingProxies()
+                .UseSqlServer(builder.Configuration.GetConnectionString("DBConnectionString"))
 );
 
 builder.Services
@@ -57,6 +61,8 @@ builder.Services.AddScoped<IProcessYoutubeDataService, ProcessYoutubeDataService
 builder.Services.AddScoped<IStoreYoutubeDataService, StoreYoutubeDataService>();
 
 var app = builder.Build();
+
+app.UseMiddleware<QueryInspectionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

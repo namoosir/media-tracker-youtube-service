@@ -7,21 +7,23 @@ namespace MediaTrackerYoutubeService.Models
     {
         [Key]
         [GraphQLDescription("Unique identifier for the video according to YouTube (External)")]
-        public string YoutubeId { get; set; }
+        public required string YoutubeId { get; set; }
 
         [GraphQLDescription("The channel to which this video belongs")]
-        public Channel Channel { get; set; }
+        public required virtual Channel Channel { get; set; }
 
         [GraphQLDescription("The number of views this video has received")]
-        public int ViewCount { get; set; }
+        public int? ViewCount { get; set; }
 
         [GraphQLDescription("The number of likes this video has received")]
-        public int LikeCount { get; set; }
+        public int? LikeCount { get; set; }
 
         [GraphQLDescription("The number of comments posted on this video")]
-        public int CommentCount { get; set; }
+        public int? CommentCount { get; set; }
 
         [GraphQLDescription("URL of the video's thumbnail image")]
-        public string ThumbnailUrl { get; set; }
+        public required string ThumbnailUrl { get; set; }
+
+        public required string ETag { get; set; }
     }
 }

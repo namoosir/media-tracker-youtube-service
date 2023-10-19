@@ -1,6 +1,5 @@
 using MediaTrackerYoutubeService.Models;
-using MediaTrackerYoutubeService.Models.Utils;
-
+using MediaTrackerYoutubeService.Schemas;
 namespace MediaTrackerYoutubeService.Services.UserVideoService;
 
 public interface IUserVideoService

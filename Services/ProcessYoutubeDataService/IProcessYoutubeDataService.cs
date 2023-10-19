@@ -1,11 +1,11 @@
 using MediaTrackerYoutubeService.Models;
-using MediaTrackerYoutubeService.Models.Utils;
+using MediaTrackerYoutubeService.Schemas;
 
 namespace MediaTrackerYoutubeService.Services.ProcessYoutubeDataService;
 
 public interface IProcessYoutubeDataService
 {
-    Task<ServiceResponse<List<UserVideo>>> ProcessYoutubeData(
-        List<UserYoutubeVideo> userYoutubeVideos
-    );
+    // Task<ServiceResponse<List<UserVideo>>> ProcessYoutubeData(
+    //     List<UserYoutubeVideo> userYoutubeVideos
+    // );
 }

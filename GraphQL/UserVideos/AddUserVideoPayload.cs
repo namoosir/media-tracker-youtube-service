@@ -2,5 +2,5 @@ using MediaTrackerYoutubeService.Models;
 
 namespace MediaTrackerYoutubeService.GraphQL.UserVideos
 {
-    public record AddUserVideoPayload(UserVideo UserVideo);
+    // public record AddUserVideoPayload(UserVideo UserVideo);
 }
