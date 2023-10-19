@@ -1,66 +1,101 @@
-// using Microsoft.VisualStudio.TestTools.UnitTesting;
-// using Moq;
-// using MediaTrackerYoutubeService.Services.UserService;
-// using MediaTrackerYoutubeService.Data;
-// using MediaTrackerYoutubeService.Models;
-// using MediaTrackerYoutubeService.Dtos.User;
-// using System.Threading.Tasks;
-// using System;
-// using AutoMapper;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.EntityFrameworkCore;
+using Moq;
+using System;
+using System.Threading.Tasks;
+using MediaTrackerYoutubeService.Services.UserService;
+using MediaTrackerYoutubeService.Dtos.User;
+using MediaTrackerYoutubeService.Models;
+using MediaTrackerYoutubeService.Data;
+using MediaTrackerYoutubeService.Services;
+using AutoMapper;
 
-// [TestClass]
-// public class UserServiceTests
-// {
-//     [TestMethod]
-//     public async Task AddUser_ValidUserId_ReturnsServiceResponseWithUserId()
-//     {
-//         // Arrange
-//         var userId = 123;
-//         var userDto = new UserIdDto { UserId = userId };
+namespace MediaTrackerYoutubeService.Tests.Services
+{
+    [TestClass]
+    public class UserServiceTests
+    {
+            private AppDbContext _context;
 
-//         var mockMapper = new Mock<IMapper>();
-//         mockMapper.Setup(m => m.Map<User>(It.IsAny<UserIdDto>()))
-//             .Returns(new User { UserId = userId });
+        public UserServiceTests()
+        {
+            // Set up your DbContext here
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseLazyLoadingProxies()
+                .UseSqlServer("Server=localhost,1434;Database=YoutubeDB;User Id=sa;Password=pa55w0rd!;TrustServerCertificate=True")
+                .Options;
 
-//         var mockContext = new Mock<AppDbContext>();
-//         mockContext.Setup(c => c.SaveChangesAsync()).ReturnsAsync(1);
+            _context = new AppDbContext(options);
+        }
 
-//         var userService = new UserService(mockMapper.Object, mockContext.Object);
+        [TestMethod]
+        public async Task GetUser_ValidUserId_ReturnsUser()
+        {
+            // // Arrange
+            // var options = new DbContextOptionsBuilder<AppDbContext>()
+            //     .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            //     .Options;
 
-//         // Act
-//         var result = await userService.AddUser(userId);
+            // // Set up some sample data
+            // using (var context = new AppDbContext(options))
+            // {
+                var channels = new List<Channel>();
+                channels.Add(new Channel { CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now, YoutubeId = "strasaing", Title = "broom", ETag = "adsfasdf"});
+                channels.Add(new Channel { CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now, YoutubeId = "223g4", Title = "234asdf", ETag = "zxcvzcvz"});
 
-//         // Assert
-//         Assert.IsTrue(result.Success);
-//         Assert.IsNotNull(result.Data);
-//         Assert.AreEqual(userId, result.Data.UserId);
-//     }
+                var c1 = new Channel { CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now, YoutubeId = "stringsdgg", Title = "broodsfm", ETag = "adsffsdfggsdf"};
 
-//     [TestMethod]
-//     public async Task UpsertUser_UserExists_ReturnsServiceResponseWithUserId()
-//     {
-//         // Arrange
-//         var userId = 123;
-//         var existingUser = new User { UserId = userId };
+                var playlists = new List<Playlist>();
+                var videos = new List<Video>
+                {
+                    new Video { CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now, ETag = "sdf", Channel = c1, ThumbnailUrl = "sda", YoutubeId = "sxfsd" }
+                };
+                playlists.Add(new Playlist{ CreatedAt = DateTime.Now,  UpdatedAt = DateTime.Now, ETag="sdf" , Videos = videos, YoutubeId = "fdsfdfsfdsf"});
+    
+                _context.Users.Add(new User { UserId = 1, CreatedAt = DateTime.Now,  UpdatedAt = DateTime.Now, SubscribedChannels = channels, VideoPlaylists = playlists });
+                _context.SaveChanges();
+            // }
 
-//         var mockMapper = new Mock<IMapper>();
-//         mockMapper.Setup(m => m.Map<UserIdDto>(It.IsAny<User>()))
-//             .Returns(new UserIdDto { UserId = userId });
+            var mockMapper = new Mock<IMapper>();
+            // var mockContext = new AppDbContext(options);
 
-//         var mockContext = new Mock<AppDbContext>();
-//         mockContext.Setup(c => c.Users.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
-//             .ReturnsAsync(existingUser);
+            var userService = new UserService(mockMapper.Object, _context);
 
-//         var userService = new UserService(mockMapper.Object, mockContext.Object);
 
-//         // Act
-//         var result = await userService.UpsertUser(userId);
 
-//         // Assert
-//         Assert.IsTrue(result.Success);
-//         Assert.IsNotNull(result.Data);
-//         Assert.AreEqual(userId, result.Data.UserId);
-//     }
+            // Act
+            var result = await userService.GetUser(1);
+            
+            var play = result.Data.VideoPlaylists;
+            var subv = result.Data.SubscribedChannels;
+            // Assert
+            Assert.IsTrue(result.Success);
+            Assert.IsNotNull(result.Data);
+            Assert.AreEqual(1, result.Data.UserId);
+            
+            // Assert.AreEqual(result.Data.SubscribedChannels[0], channels[0])
+            // Assert.AreEqual(1, result.Data.UserId);
+        }
 
-//     // Additional test cases can be added for edge cases, error handling, etc.
-// }
+        [TestMethod]
+        public async Task GetUser_InvalidUserId_ReturnsNull()
+        {
+            // Arrange
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+
+            var mockMapper = new Mock<IMapper>();
+
+            var userService = new UserService(mockMapper.Object, _context);
+
+            // Act
+            var result = await userService.GetUser(999); // Assuming there's no user with UserId 999
+
+            // Assert
+            Assert.IsFalse(result.Success);
+            Assert.IsNull(result.Data);
+            Assert.IsNotNull(result.Message); // You might want to assert the specific error message here
+        }
+    }
+}
