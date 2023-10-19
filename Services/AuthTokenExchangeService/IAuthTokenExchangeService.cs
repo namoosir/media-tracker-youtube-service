@@ -5,5 +5,5 @@ namespace MediaTrackerYoutubeService.Services.AuthTokenExchangeService;
 
 public interface IAuthTokenExchangeService
 {
-    Task<ServiceResponse<UserInformation>> YoutubeAuthTokenExchange(int userId);
+    Task<ServiceResponse<string>> YoutubeAuthTokenExchange(int userId);
 }
