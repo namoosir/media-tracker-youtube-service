@@ -5,6 +5,7 @@ using MediaTrackerYoutubeService.Utils.Youtube;
 using MediaTrackerYoutubeService.Services.AuthTokenExchangeService;
 using MediaTrackerYoutubeService.Models;
 using MediaTrackerYoutubeService.Services.UserService;
+using MediaTrackerYoutubeService.Schemas;
 
 namespace MediaTrackerYoutubeService.Services.DataSynchronizationService;
 
@@ -51,21 +52,37 @@ public class DataSynchronizationService : IDataSynchronizationService
         try {
             var getUserResponse = await _userService.GetUser(userId);
             if (!getUserResponse.Success) throw new Exception("Failed to get User");
+            
+            var playlistsInternal = getUserResponse.Data!.VideoPlaylists.OrderByDescending(x => x.UpdatedAt);
+
+            List<Resource> playlistsExternal = new();
             var playlistsResponse = await client.GetMyPlaylists();
 
+            playlistsExternal.AddRange(playlistsResponse.items);
 
-            // playlistsInternal.
+            while (playlistsResponse.nextPageToken != null)
+            {
+                playlistsResponse = await client.GetMyPlaylists(playlistsResponse.nextPageToken);
+                playlistsExternal.AddRange(playlistsResponse.items);
+            }
+
+
+            // Merge Internal and External
+
             
+            // Condition:
+            // -    Playlist is out of date by more than 10 mins
+            // -    The internal and external hashes DO NOT match
+            // var playlistsToUpdate
 
 
-            var playlistsExternal = playlistsResponse.items;
-            var playlistsInternal = getUserResponse.Data!.VideoPlaylists;
-
-            // foreach (var playlist in playlists) {
-                
-            // }
-
-
+            // Condition:
+            // -    Playlist is external ONLY
+            // var playlistsToInsert 
+            
+            // Condition:
+            // -    Playlist is internal ONLY
+            // var playlistsToDelete
         } catch {
 
         }
