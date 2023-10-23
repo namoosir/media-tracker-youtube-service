@@ -12,8 +12,8 @@ using GraphQLParser.Visitors;
 using HotChocolate.Types.Descriptors.Definitions;
 using Microsoft.AspNetCore.Http.Extensions;
 
-
 namespace MediaTrackerYoutubeService.Middleware;
+
 public class QueryInspectionMiddleware
 {
     private readonly Microsoft.AspNetCore.Http.RequestDelegate _next;
@@ -23,23 +23,44 @@ public class QueryInspectionMiddleware
         _next = next;
     }
 
-    private string? ExtractUserId(List<ASTNode> definitions) {
-        foreach (var definition in definitions) {
-            if (definition is GraphQLOperationDefinition operation) {
+    private string? ExtractUserId(List<ASTNode> definitions)
+    {
+        foreach (var definition in definitions)
+        {
+            if (definition is GraphQLOperationDefinition operation)
+            {
                 var userField = operation.SelectionSet.Selections
-                                    .OfType<GraphQLField>()
-                                    .FirstOrDefault(f => f.Name.StringValue == "user");
-                
-                if (userField != null && userField.Arguments != null) {
-                    var whereArgument = userField.Arguments.FirstOrDefault(arg => arg.Name.StringValue == "where");
+                    .OfType<GraphQLField>()
+                    .FirstOrDefault(f => f.Name.StringValue == "user");
 
-                    if (whereArgument != null && whereArgument.Value is GraphQLObjectValue whereInputObject && whereInputObject.Fields != null) {
-                        var userIdField = whereInputObject.Fields.FirstOrDefault(f => f.Name.StringValue == "userId");
+                if (userField != null && userField.Arguments != null)
+                {
+                    var whereArgument = userField.Arguments.FirstOrDefault(
+                        arg => arg.Name.StringValue == "where"
+                    );
 
-                        if (userIdField != null && userIdField.Value is GraphQLObjectValue eqValue && eqValue.Fields != null) {
-                            var eqField = eqValue.Fields.FirstOrDefault(f => f.Name.StringValue == "eq");
+                    if (
+                        whereArgument != null
+                        && whereArgument.Value is GraphQLObjectValue whereInputObject
+                        && whereInputObject.Fields != null
+                    )
+                    {
+                        var userIdField = whereInputObject.Fields.FirstOrDefault(
+                            f => f.Name.StringValue == "userId"
+                        );
 
-                            if (eqField != null && eqField.Value is GraphQLIntValue intValue) {
+                        if (
+                            userIdField != null
+                            && userIdField.Value is GraphQLObjectValue eqValue
+                            && eqValue.Fields != null
+                        )
+                        {
+                            var eqField = eqValue.Fields.FirstOrDefault(
+                                f => f.Name.StringValue == "eq"
+                            );
+
+                            if (eqField != null && eqField.Value is GraphQLIntValue intValue)
+                            {
                                 return intValue.Value.ToString();
                             }
                         }
@@ -54,11 +75,12 @@ public class QueryInspectionMiddleware
     {
         var uri = context.Request.GetEncodedPathAndQuery();
 
-        if (uri != "/graphql") {
+        if (uri != "/graphql")
+        {
             await _next(context);
             return;
         }
-        
+
         var requestBodyStream = new MemoryStream();
         await context.Request.Body.CopyToAsync(requestBodyStream);
         requestBodyStream.Seek(0, SeekOrigin.Begin);
@@ -71,10 +93,13 @@ public class QueryInspectionMiddleware
 
             var queryObject = Parser.Parse(json["query"]?.Value<string>());
             var userId = ExtractUserId(queryObject.Definitions);
-            
-            if (userId != null) {
+
+            if (userId != null)
+            {
                 //call sync service on the userid
-            } else {
+            }
+            else
+            {
                 //some error handling??
             }
         }

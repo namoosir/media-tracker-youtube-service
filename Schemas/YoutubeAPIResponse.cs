@@ -20,7 +20,7 @@ public class YoutubeAPIResponse
     public required List<Resource> items { get; set; }
 }
 
-public class Resource 
+public class Resource
 {
     public required string kind { get; set; }
     public required string etag { get; set; }
@@ -32,12 +32,11 @@ public class Resource
     public ContentDetails? contentDetails { get; set; }
 }
 
-
 // Only for PlaylistItems Endpoint
-public class ContentDetails {
+public class ContentDetails
+{
     public required string videoId { get; set; }
 }
-
 
 public class Statistics
 {
@@ -47,7 +46,6 @@ public class Statistics
     public int? likeCount { get; set; }
     public int? commentCount { get; set; }
     public int? favoriteCount { get; set; }
-
 
     // Channels
     public int? subscriberCount { get; set; }
@@ -72,14 +70,17 @@ public class Snippet
     {
         public required string url { get; set; }
 
-        public override string ToString(){return $"URL: {url}";}
+        public override string ToString()
+        {
+            return $"URL: {url}";
+        }
     }
 
     public ResourceId? resourceId { get; set; }
 
-
     // Specific only to Subsciptions, hence channelId
-    public class ResourceId  {
+    public class ResourceId
+    {
         public required string channelId { get; set; }
     }
 }

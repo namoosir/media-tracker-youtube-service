@@ -15,14 +15,16 @@ namespace MediaTrackerYoutubeService.Tests.Services
     [TestClass]
     public class UserServiceTests
     {
-            private AppDbContext _context;
+        private AppDbContext _context;
 
         public UserServiceTests()
         {
             // Set up your DbContext here
             var options = new DbContextOptionsBuilder<AppDbContext>()
                 .UseLazyLoadingProxies()
-                .UseSqlServer("Server=localhost,1434;Database=YoutubeDB;User Id=sa;Password=pa55w0rd!;TrustServerCertificate=True")
+                .UseSqlServer(
+                    "Server=localhost,1434;Database=YoutubeDB;User Id=sa;Password=pa55w0rd!;TrustServerCertificate=True"
+                )
                 .Options;
 
             _context = new AppDbContext(options);
@@ -39,21 +41,72 @@ namespace MediaTrackerYoutubeService.Tests.Services
             // // Set up some sample data
             // using (var context = new AppDbContext(options))
             // {
-                var channels = new List<Channel>();
-                channels.Add(new Channel { CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now, YoutubeId = "strasaing", Title = "broom", ETag = "adsfasdf"});
-                channels.Add(new Channel { CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now, YoutubeId = "223g4", Title = "234asdf", ETag = "zxcvzcvz"});
-
-                var c1 = new Channel { CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now, YoutubeId = "stringsdgg", Title = "broodsfm", ETag = "adsffsdfggsdf"};
-
-                var playlists = new List<Playlist>();
-                var videos = new List<Video>
+            var channels = new List<Channel>();
+            channels.Add(
+                new Channel
                 {
-                    new Video { CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now, ETag = "sdf", Channel = c1, ThumbnailUrl = "sda", YoutubeId = "sxfsd" }
-                };
-                playlists.Add(new Playlist{ CreatedAt = DateTime.Now,  UpdatedAt = DateTime.Now, ETag="sdf" , Videos = videos, YoutubeId = "fdsfdfsfdsf"});
-    
-                _context.Users.Add(new User { UserId = 1, CreatedAt = DateTime.Now,  UpdatedAt = DateTime.Now, SubscribedChannels = channels, VideoPlaylists = playlists });
-                _context.SaveChanges();
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
+                    YoutubeId = "strasaing",
+                    Title = "broom",
+                    ETag = "adsfasdf"
+                }
+            );
+            channels.Add(
+                new Channel
+                {
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
+                    YoutubeId = "223g4",
+                    Title = "234asdf",
+                    ETag = "zxcvzcvz"
+                }
+            );
+
+            var c1 = new Channel
+            {
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                YoutubeId = "stringsdgg",
+                Title = "broodsfm",
+                ETag = "adsffsdfggsdf"
+            };
+
+            var playlists = new List<Playlist>();
+            var videos = new List<Video>
+            {
+                new Video
+                {
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
+                    ETag = "sdf",
+                    Channel = c1,
+                    ThumbnailUrl = "sda",
+                    YoutubeId = "sxfsd"
+                }
+            };
+            playlists.Add(
+                new Playlist
+                {
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
+                    ETag = "sdf",
+                    Videos = videos,
+                    YoutubeId = "fdsfdfsfdsf"
+                }
+            );
+
+            _context.Users.Add(
+                new User
+                {
+                    UserId = 1,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
+                    SubscribedChannels = channels,
+                    VideoPlaylists = playlists
+                }
+            );
+            _context.SaveChanges();
             // }
 
             var mockMapper = new Mock<IMapper>();
@@ -61,18 +114,16 @@ namespace MediaTrackerYoutubeService.Tests.Services
 
             var userService = new UserService(mockMapper.Object, _context);
 
-
-
             // Act
             var result = await userService.GetUser(1);
-            
+
             var play = result.Data.VideoPlaylists;
             var subv = result.Data.SubscribedChannels;
             // Assert
             Assert.IsTrue(result.Success);
             Assert.IsNotNull(result.Data);
             Assert.AreEqual(1, result.Data.UserId);
-            
+
             // Assert.AreEqual(result.Data.SubscribedChannels[0], channels[0])
             // Assert.AreEqual(1, result.Data.UserId);
         }

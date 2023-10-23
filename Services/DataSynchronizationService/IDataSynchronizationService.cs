@@ -1,6 +1,3 @@
 namespace MediaTrackerYoutubeService.Services.DataSynchronizationService;
 
-public interface IDataSynchronizationService
-{
-
-}
+public interface IDataSynchronizationService { }

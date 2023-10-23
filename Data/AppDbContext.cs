@@ -23,9 +23,11 @@ namespace MediaTrackerYoutubeService.Data
         {
             var entries = ChangeTracker
                 .Entries()
-                .Where(e => e.Entity is BaseEntity && (
-                        e.State == EntityState.Added
-                        || e.State == EntityState.Modified));
+                .Where(
+                    e =>
+                        e.Entity is BaseEntity
+                        && (e.State == EntityState.Added || e.State == EntityState.Modified)
+                );
 
             foreach (var entityEntry in entries)
             {

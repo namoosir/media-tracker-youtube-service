@@ -10,8 +10,8 @@ namespace MediaTrackerYoutubeService.Models
         public required string YoutubeId { get; set; }
 
         [GraphQLDescription("Videos comprising the playlist")]
-        public required virtual ICollection<Video> Videos { get; set; }
-        
+        public virtual required ICollection<Video> Videos { get; set; }
+
         public required string ETag { get; set; }
     }
 }

@@ -15,8 +15,15 @@ public class DataSynchronizationService : IDataSynchronizationService
     private readonly IAuthTokenExchangeService _authTokenExchangeService;
     private readonly IConfiguration _configuration;
     private readonly IUserService _userService;
-    
-    public DataSynchronizationService(IDbContextFactory<AppDbContext> context, IAuthTokenExchangeService authTokenExchangeService, IUserService userService, IConfiguration configuration)
+
+    private const double REFRESH_DELAY = 10.0;
+
+    public DataSynchronizationService(
+        IDbContextFactory<AppDbContext> context,
+        IAuthTokenExchangeService authTokenExchangeService,
+        IUserService userService,
+        IConfiguration configuration
+    )
     {
         _context = context;
         _authTokenExchangeService = authTokenExchangeService;
@@ -24,36 +31,46 @@ public class DataSynchronizationService : IDataSynchronizationService
         _configuration = configuration;
     }
 
-    public async void SyncData(int userId){
-        try 
+    public async void SyncData(int userId)
+    {
+        try
         {
-            if (!(await _userService.UpsertUser(userId)).Success) throw new Exception("Failed to add new user or confirm exisiting user");
-            
+            if (!(await _userService.UpsertUser(userId)).Success)
+                throw new Exception("Failed to add new user or confirm exisiting user");
+
             var tokenResult = await _authTokenExchangeService.YoutubeAuthTokenExchange(userId);
-            
-            if (!tokenResult.Success) throw new Exception("Failed to get youtube token");
-            
+
+            if (!tokenResult.Success)
+                throw new Exception("Failed to get youtube token");
+
             var access_token = tokenResult.Data;
-            var apiKey = _configuration["YoutubeAPIKey"] ?? throw new Exception("Missing ApiKey in Config");
-            
+            var apiKey =
+                _configuration["YoutubeAPIKey"] ?? throw new Exception("Missing ApiKey in Config");
+
             YoutubeAPIClient client = new YoutubeAPIClient(access_token, apiKey);
-            
-            
-            await Task.WhenAll(SyncPlaylistsAndAssociatedVideos(userId, client),
-                                SyncSubscriptionsAndAssociatedChannels(userId, client));
+
+            await Task.WhenAll(
+                SyncPlaylistsAndAssociatedVideos(userId, client),
+                SyncSubscriptionsAndAssociatedChannels(userId, client)
+            );
         }
-        catch (Exception e) 
+        catch (Exception e)
         {
             Console.WriteLine(e);
         }
     }
 
-    private async Task SyncPlaylistsAndAssociatedVideos(int userId, YoutubeAPIClient client){
-        try {
+    private async Task SyncPlaylistsAndAssociatedVideos(int userId, YoutubeAPIClient client)
+    {
+        try
+        {
             var getUserResponse = await _userService.GetUser(userId);
-            if (!getUserResponse.Success) throw new Exception("Failed to get User");
-            
-            var playlistsInternal = getUserResponse.Data!.VideoPlaylists.OrderByDescending(x => x.UpdatedAt);
+            if (!getUserResponse.Success)
+                throw new Exception("Failed to get User");
+
+            var playlistsInternal = getUserResponse.Data!.VideoPlaylists.OrderByDescending(
+                x => x.UpdatedAt
+            );
 
             List<Resource> playlistsExternal = new();
             var playlistsResponse = await client.GetMyPlaylists();
@@ -66,10 +83,47 @@ public class DataSynchronizationService : IDataSynchronizationService
                 playlistsExternal.AddRange(playlistsResponse.items);
             }
 
+            List<Playlist> playlistsToUpdate = new();
+            List<Playlist> playlistsToInsert = new();
+            List<Playlist> playlistsToDelete = new();
 
             // Merge Internal and External
+            foreach (var pi in playlistsInternal)
+            {
+                if ((DateTime.Now - pi.UpdatedAt).TotalMinutes < REFRESH_DELAY)
+                {
+                    break;
+                }
+            }
 
-            
+            foreach (var pe in playlistsExternal)
+            {
+                var foundInternal = playlistsInternal.FirstOrDefault(x => x.YoutubeId == pe.id);
+
+                if (foundInternal == null) { }
+
+                // if ((DateTime.Now - pi.UpdatedAt).TotalMinutes < REFRESH_DELAY) {
+                //     break;
+                // }
+
+                // var found = playlistsExternal.FirstOrDefault(x => x.id == pi.YoutubeId);
+
+                // if (found == null)
+                // {
+
+                // }
+                // else {
+
+                // }
+                // if (found != null && found.etag != pi.ETag) {
+                //     //create new playlist object with updated fields or update the existing fields of the playlist object
+                //     // add to list
+
+                //     // var playListToAdd = new Playlist();
+                //     // playlistsToUpdate.Add();
+                // }
+            }
+
             // Condition:
             // -    Playlist is out of date by more than 10 mins
             // -    The internal and external hashes DO NOT match
@@ -78,17 +132,17 @@ public class DataSynchronizationService : IDataSynchronizationService
 
             // Condition:
             // -    Playlist is external ONLY
-            // var playlistsToInsert 
-            
+            // var playlistsToInsert
+
             // Condition:
             // -    Playlist is internal ONLY
             // var playlistsToDelete
-        } catch {
-
         }
+        catch { }
     }
 
-    private async Task SyncSubscriptionsAndAssociatedChannels(int userId, YoutubeAPIClient client){
+    private async Task SyncSubscriptionsAndAssociatedChannels(int userId, YoutubeAPIClient client)
+    {
         throw new NotImplementedException();
     }
 }
