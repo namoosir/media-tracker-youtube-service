@@ -4,7 +4,6 @@ using MediaTrackerYoutubeService.Services.AuthTokenExchangeService;
 using MediaTrackerYoutubeService.Services.FetchYoutubeDataService;
 using MediaTrackerYoutubeService.Services.ProcessYoutubeDataService;
 using MediaTrackerYoutubeService.Services.StoreYoutubeDataService;
-using MediaTrackerYoutubeService.Services.UserVideoService;
 using MediaTrackerYoutubeService.Middleware;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,7 +53,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddHttpClient();
-builder.Services.AddScoped<IUserVideoService, UserVideoService>();
 builder.Services.AddScoped<IAuthTokenExchangeService, AuthTokenExchangeService>();
 builder.Services.AddScoped<IFetchYoutubeDataService, FetchYoutubeDataService>();
 builder.Services.AddScoped<IProcessYoutubeDataService, ProcessYoutubeDataService>();
