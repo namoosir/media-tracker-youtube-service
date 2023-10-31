@@ -64,13 +64,19 @@ public class DataSynchronizationService : IDataSynchronizationService
     {
         try
         {
+            //
+            // playlistsExternal = fetchService....
+            // (toUpdate, toInsert, toDelete) = processService(playlistExternal)
+            // storeService.store((toUpdate, toInsert, toDelete))
+            //
+
             var getUserResponse = await _userService.GetUser(userId);
+
             if (!getUserResponse.Success)
                 throw new Exception("Failed to get User");
 
-            var playlistsInternal = getUserResponse.Data!.VideoPlaylists.OrderByDescending(
-                x => x.UpdatedAt
-            );
+            var user = getUserResponse!.Data;
+            var playlistsInternal = user!.VideoPlaylists;
 
             List<Resource> playlistsExternal = new();
             var playlistsResponse = await client.GetMyPlaylists();
@@ -87,58 +93,47 @@ public class DataSynchronizationService : IDataSynchronizationService
             List<Playlist> playlistsToInsert = new();
             List<Playlist> playlistsToDelete = new();
 
-            // Merge Internal and External
-            foreach (var pi in playlistsInternal)
-            {
-                if ((DateTime.Now - pi.UpdatedAt).TotalMinutes < REFRESH_DELAY)
-                {
-                    break;
-                }
-            }
-
             foreach (var pe in playlistsExternal)
             {
                 var foundInternal = playlistsInternal.FirstOrDefault(x => x.YoutubeId == pe.id);
 
-                if (foundInternal == null) { }
+                //create new playlist object and append to playlistsToInsert
+                if (foundInternal == null)
+                {
+                    var playlistRecord = new Playlist
+                    {
+                        User = user,
+                        YoutubeId = pe.id,
+                        ETag = pe.etag,
+                        Videos = new List<Video>()
+                    };
 
-                // if ((DateTime.Now - pi.UpdatedAt).TotalMinutes < REFRESH_DELAY) {
-                //     break;
-                // }
-
-                // var found = playlistsExternal.FirstOrDefault(x => x.id == pi.YoutubeId);
-
-                // if (found == null)
-                // {
-
-                // }
-                // else {
-
-                // }
-                // if (found != null && found.etag != pi.ETag) {
-                //     //create new playlist object with updated fields or update the existing fields of the playlist object
-                //     // add to list
-
-                //     // var playListToAdd = new Playlist();
-                //     // playlistsToUpdate.Add();
-                // }
+                    playlistsToInsert.Add(playlistRecord);
+                    playlistsToUpdate.Add(playlistRecord);
+                }
+                //add updated element to playlistsToUpdate
+                else if (
+                    (DateTime.Now - foundInternal.UpdatedAt).TotalMinutes >= REFRESH_DELAY
+                    && foundInternal.ETag != pe.etag
+                )
+                {
+                    foundInternal.ETag = pe.etag;
+                    playlistsToUpdate.Add(foundInternal);
+                }
             }
 
-            // Condition:
-            // -    Playlist is out of date by more than 10 mins
-            // -    The internal and external hashes DO NOT match
-            // var playlistsToUpdate
+            //create list of playlists to delete
+            foreach (var pi in playlistsInternal)
+            {
+                var foundExternal = playlistsExternal.FirstOrDefault(x => x.id == pi.YoutubeId);
 
-
-            // Condition:
-            // -    Playlist is external ONLY
-            // var playlistsToInsert
-
-            // Condition:
-            // -    Playlist is internal ONLY
-            // var playlistsToDelete
+                if (foundExternal == null)
+                {
+                    playlistsToDelete.Add(pi);
+                }
+            }
         }
-        catch { }
+        catch (Exception e) { }
     }
 
     private async Task SyncSubscriptionsAndAssociatedChannels(int userId, YoutubeAPIClient client)
