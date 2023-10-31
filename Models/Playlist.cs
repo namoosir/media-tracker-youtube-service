@@ -12,6 +12,9 @@ namespace MediaTrackerYoutubeService.Models
         [GraphQLDescription("Videos comprising the playlist")]
         public virtual required ICollection<Video> Videos { get; set; }
 
+        [GraphQLDescription("Owner of the playlist")]
+        public virtual required User User { get; set; }
+
         public required string ETag { get; set; }
     }
 }

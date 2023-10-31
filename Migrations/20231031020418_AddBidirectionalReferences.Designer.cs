@@ -4,6 +4,7 @@ using MediaTrackerYoutubeService.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediaTrackerYoutubeService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231031020418_AddBidirectionalReferences")]
+    partial class AddBidirectionalReferences
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,21 +27,6 @@ namespace MediaTrackerYoutubeService.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("ChannelUser", b =>
-                {
-                    b.Property<string>("SubscribedChannelsYoutubeId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("UserSubscribersUserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SubscribedChannelsYoutubeId", "UserSubscribersUserId");
-
-                    b.HasIndex("UserSubscribersUserId");
-
-                    b.ToTable("ChannelUser");
-                });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Channel", b =>
                 {
@@ -65,6 +53,9 @@ namespace MediaTrackerYoutubeService.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("VideoCount")
                         .HasColumnType("int");
 
@@ -72,6 +63,8 @@ namespace MediaTrackerYoutubeService.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("YoutubeId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Channels");
                 });
@@ -170,19 +163,11 @@ namespace MediaTrackerYoutubeService.Migrations
                     b.ToTable("PlaylistVideo");
                 });
 
-            modelBuilder.Entity("ChannelUser", b =>
+            modelBuilder.Entity("MediaTrackerYoutubeService.Models.Channel", b =>
                 {
-                    b.HasOne("MediaTrackerYoutubeService.Models.Channel", null)
-                        .WithMany()
-                        .HasForeignKey("SubscribedChannelsYoutubeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("MediaTrackerYoutubeService.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserSubscribersUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("SubscribedChannels")
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Playlist", b =>
@@ -227,6 +212,8 @@ namespace MediaTrackerYoutubeService.Migrations
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.User", b =>
                 {
+                    b.Navigation("SubscribedChannels");
+
                     b.Navigation("VideoPlaylists");
                 });
 #pragma warning restore 612, 618

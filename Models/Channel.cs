@@ -12,6 +12,12 @@ namespace MediaTrackerYoutubeService.Models
         [GraphQLDescription("The title of the channel")]
         public required string Title { get; set; }
 
+        [GraphQLDescription("The videos created by this channel")]
+        public virtual required ICollection<Video> Videos { get; set; }
+
+        [GraphQLDescription("Subscribers to this Channel (Internal Users)")]
+        public virtual required ICollection<User> UserSubscribers { get; set; }
+
         [GraphQLDescription("The number of subscribers for this channel")]
         public int? SubscriberCount { get; set; }
 
