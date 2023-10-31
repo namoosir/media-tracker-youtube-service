@@ -42,29 +42,22 @@ namespace MediaTrackerYoutubeService.Tests.Services
             // using (var context = new AppDbContext(options))
             // {
             var channels = new List<Channel>();
-            channels.Add(
-                new Channel
-                {
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now,
-                    YoutubeId = "strasaing",
-                    Title = "broom",
-                    ETag = "adsfasdf"
-                }
-            );
-            channels.Add(
-                new Channel
-                {
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now,
-                    YoutubeId = "223g4",
-                    Title = "234asdf",
-                    ETag = "zxcvzcvz"
-                }
-            );
+            var playlists = new List<Playlist>();
+            var videos = new List<Video>();
+
+            var user = new User
+            {
+                UserId = 1,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                SubscribedChannels = channels,
+                VideoPlaylists = playlists
+            };
 
             var c1 = new Channel
             {
+                UserSubscribers = new List<User>(),
+                Videos = videos,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now,
                 YoutubeId = "stringsdgg",
@@ -72,29 +65,54 @@ namespace MediaTrackerYoutubeService.Tests.Services
                 ETag = "adsffsdfggsdf"
             };
 
-            var playlists = new List<Playlist>();
-            var videos = new List<Video>
+            var c2 = new Channel
             {
-                new Video
-                {
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now,
-                    ETag = "sdf",
-                    Channel = c1,
-                    ThumbnailUrl = "sda",
-                    YoutubeId = "sxfsd"
-                }
+                UserSubscribers = new List<User>(),
+                Videos = videos,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                YoutubeId = "strasaing",
+                Title = "broom",
+                ETag = "adsfasdf"
             };
-            playlists.Add(
-                new Playlist
-                {
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now,
-                    ETag = "sdf",
-                    Videos = videos,
-                    YoutubeId = "fdsfdfsfdsf"
-                }
-            );
+
+            var c3 = new Channel
+            {
+                UserSubscribers = new List<User>(),
+                Videos = videos,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                YoutubeId = "223g4",
+                Title = "234asdf",
+                ETag = "zxcvzcvz"
+            };
+
+            var v1 = new Video
+            {
+                Playlist = playlists,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                ETag = "sdf",
+                Channel = c1,
+                ThumbnailUrl = "sda",
+                YoutubeId = "sxfsd"
+            };
+
+            var p1 = new Playlist
+            {
+                User = user,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                ETag = "sdf",
+                Videos = videos,
+                YoutubeId = "fdsfdfsfdsf"
+            };
+
+            playlists.Add(p1);
+            videos.Add(v1);
+            channels.Add(c1);
+            channels.Add(c2);
+            channels.Add(c3);
 
             _context.Users.Add(
                 new User
