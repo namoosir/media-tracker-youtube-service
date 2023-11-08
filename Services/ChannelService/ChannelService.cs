@@ -13,7 +13,27 @@ public class ChannelService : IChannelService
         _context = context;
     }
 
-    public async Task<ServiceResponse<List<Channel>>> GetChannel()
+    public async Task<ServiceResponse<Channel>> GetChannel(string channelId)
+    {
+        var serviceResponse = new ServiceResponse<Channel>();
+        try
+        {
+            var channel = await _context.Channels.FirstOrDefaultAsync(
+                channel => channel.YoutubeId == channelId
+            );
+            if (channel is null)
+                throw new Exception($"No user with id {channel} exists");
+            serviceResponse.Data = channel;
+        }
+        catch (Exception e)
+        {
+            serviceResponse.Success = false;
+            serviceResponse.Message = e.Message;
+        }
+        return serviceResponse;
+    }
+
+    public async Task<ServiceResponse<List<Channel>>> GetChannel(List<string> channelsIds)
     {
         throw new NotImplementedException();
     }
