@@ -9,6 +9,9 @@ namespace MediaTrackerYoutubeService.Models
         [GraphQLDescription("Unique identifier for the video according to YouTube (External)")]
         public required string YoutubeId { get; set; }
 
+        [GraphQLDescription("The title of the video")]
+        public required string Title { get; set; }
+
         [GraphQLDescription("The channel to which this video belongs")]
         public virtual required Channel Channel { get; set; }
 

@@ -9,6 +9,9 @@ namespace MediaTrackerYoutubeService.Models
         [GraphQLDescription("Unique identifier for playlist according to Youtube (External)")]
         public required string YoutubeId { get; set; }
 
+        [GraphQLDescription("The title of the playlist")]
+        public required string Title { get; set; }
+
         [GraphQLDescription("Videos comprising the playlist")]
         public virtual required ICollection<Video> Videos { get; set; }
 
