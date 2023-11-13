@@ -59,6 +59,9 @@ public class Snippet
     public required string description { get; set; }
 
     public string? channelId { get; set; }
+
+    public string? videoOwnerChannelId { get; set; }
+
     public Thumbnails? thumbnails { get; set; }
 
     public class Thumbnails
