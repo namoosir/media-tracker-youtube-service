@@ -67,9 +67,18 @@ public class FetchYoutubeDataService : IFetchYoutubeDataService
         List<Channel> channelsToUpdate
     )
     {
+        Console.WriteLine("JKSDNJLKVC");
+        Console.WriteLine(channelsToUpdate.Count);
+
         List<string> channelIdsToUpdate = channelsToUpdate
             .Select(channel => channel.YoutubeId)
             .ToList();
+
+        for (int i = 0; i < channelIdsToUpdate.Count; i++)
+        {
+            Console.WriteLine("HOHO");
+            Console.WriteLine(channelIdsToUpdate[i]);
+        }
 
         int blockSize = 50;
         List<List<string>> channelIdsToUpdateBlocks = Enumerable
@@ -77,11 +86,25 @@ public class FetchYoutubeDataService : IFetchYoutubeDataService
             .Select(i => channelIdsToUpdate.Skip(i * blockSize).Take(blockSize).ToList())
             .ToList();
 
+        Console.WriteLine("JSKFJLKHDSNJ\n\n\n\n");
+        Console.WriteLine("Accessing elements of the 2D list:");
+        for (int i = 0; i < channelIdsToUpdateBlocks.Count; i++)
+        {
+            for (int j = 0; j < channelIdsToUpdateBlocks[i].Count; j++)
+            {
+                Console.Write(channelIdsToUpdateBlocks[i][j] + " K ");
+            }
+            Console.WriteLine();
+        }
+
         List<Resource> channelsToUpdateResource = new List<Resource>();
         foreach (List<string> channelIdsBlock in channelIdsToUpdateBlocks)
         {
-            var getChannelsResponse = await client.GetChannels(channelIdsBlock);
-            channelsToUpdateResource.AddRange(getChannelsResponse.items);
+            if (channelIdsBlock.Count != 0)
+            {
+                var getChannelsResponse = await client.GetChannels(channelIdsBlock);
+                channelsToUpdateResource.AddRange(getChannelsResponse.items);
+            }
         }
 
         return ServiceResponse<List<Resource>>.Build(channelsToUpdateResource, true, null);
