@@ -31,5 +31,10 @@ namespace MediaTrackerYoutubeService.Models
         public required string ThumbnailUrl { get; set; }
 
         public required string ETag { get; set; }
+
+        public required bool Imported { get; set; }
+
+        public virtual required ICollection<User> LikedByUsers { get; set; }
+        public virtual required ICollection<User> DislikedByUsers { get; set; }
     }
 }

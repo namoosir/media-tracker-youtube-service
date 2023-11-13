@@ -31,5 +31,7 @@ namespace MediaTrackerYoutubeService.Models
         public string? ThumbnailUrl { get; set; }
 
         public required string ETag { get; set; }
+
+        public required bool Imported { get; set; }
     }
 }

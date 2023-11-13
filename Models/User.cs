@@ -17,6 +17,19 @@ namespace MediaTrackerYoutubeService.Models
         [GraphQLDescription("Video playlists created by the user")]
         public virtual required ICollection<Playlist> VideoPlaylists { get; set; }
 
-        // public ... likedPlaylist
+        [GraphQLDescription("Video playlists created by the user (Etag)")]
+        public required string PlaylistsEtag { get; set; }
+
+        [GraphQLDescription("Liked User playlist")]
+        public virtual required ICollection<Video> LikedVideos { get; set; }
+
+        [GraphQLDescription("Liked User playlist (Etag)")]
+        public required string LikedVideosEtag { get; set; }
+
+        [GraphQLDescription("Disliked User playlist")]
+        public virtual required ICollection<Video> DislikedVideos { get; set; }
+
+        [GraphQLDescription("Disliked User playlist (Etag)")]
+        public required string DisikedVideosEtag { get; set; }
     }
 }
