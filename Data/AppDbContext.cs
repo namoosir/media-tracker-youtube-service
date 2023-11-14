@@ -16,6 +16,15 @@ namespace MediaTrackerYoutubeService.Data
         //good idea to implement this when creating multiple models with complex relationships
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Configure the relationship for liked videos
+            modelBuilder.Entity<User>().HasMany(u => u.LikedVideos).WithMany(v => v.LikedByUsers);
+
+            // Configure the relationship for disliked videos
+            modelBuilder
+                .Entity<User>()
+                .HasMany(u => u.DislikedVideos)
+                .WithMany(v => v.DislikedByUsers);
+
             base.OnModelCreating(modelBuilder);
         }
 

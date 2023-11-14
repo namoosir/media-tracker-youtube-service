@@ -30,6 +30,6 @@ namespace MediaTrackerYoutubeService.Models
         public virtual required ICollection<Video> DislikedVideos { get; set; }
 
         [GraphQLDescription("Disliked User playlist (Etag)")]
-        public required string DisikedVideosEtag { get; set; }
+        public required string DislikedVideosEtag { get; set; }
     }
 }
