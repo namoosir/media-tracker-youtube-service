@@ -35,7 +35,17 @@ public class ChannelService : IChannelService
 
     public async Task<ServiceResponse<List<Channel>>> GetChannel(List<string> channelsIds)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var channelRecords = await _context.Channels
+                .Where(channel => channelsIds.Contains(channel.YoutubeId))
+                .ToListAsync();
+            return ServiceResponse<List<Channel>>.Build(channelRecords, true, null);
+        }
+        catch (Exception e)
+        {
+            return ServiceResponse<List<Channel>>.Build(null, false, e.Message);
+        }
     }
 
     public async Task<ServiceResponse<List<Channel>>> AddChannel(List<Channel> channels)
