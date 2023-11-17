@@ -37,7 +37,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("UserSubscribersUserId");
 
-                    b.ToTable("ChannelUser");
+                    b.ToTable("ChannelUser", (string)null);
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Channel", b =>
@@ -76,7 +76,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasKey("YoutubeId");
 
-                    b.ToTable("Channels");
+                    b.ToTable("Channels", (string)null);
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Playlist", b =>
@@ -105,7 +105,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Playlists");
+                    b.ToTable("Playlists", (string)null);
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.User", b =>
@@ -133,7 +133,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Video", b =>
@@ -178,7 +178,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("ChannelYoutubeId");
 
-                    b.ToTable("Videos");
+                    b.ToTable("Videos", (string)null);
                 });
 
             modelBuilder.Entity("PlaylistVideo", b =>
@@ -193,7 +193,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("VideosYoutubeId");
 
-                    b.ToTable("PlaylistVideo");
+                    b.ToTable("PlaylistVideo", (string)null);
                 });
 
             modelBuilder.Entity("UserVideo", b =>
@@ -208,7 +208,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("LikedVideosYoutubeId");
 
-                    b.ToTable("UserVideo");
+                    b.ToTable("UserVideo", (string)null);
                 });
 
             modelBuilder.Entity("UserVideo1", b =>
@@ -223,7 +223,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("DislikedVideosYoutubeId");
 
-                    b.ToTable("UserVideo1");
+                    b.ToTable("UserVideo1", (string)null);
                 });
 
             modelBuilder.Entity("ChannelUser", b =>

@@ -3,14 +3,14 @@ using System.ComponentModel.DataAnnotations;
 namespace MediaTrackerYoutubeService.Models
 {
     [GraphQLDescription("Model for YouTube channels")]
-    public class Channel : BaseEntity
+    public class Channel : BaseYoutubeResource
     {
-        [Key]
-        [GraphQLDescription("Unique identifier for the channel according to YouTube (External)")]
-        public required string YoutubeId { get; set; }
+        // [Key]
+        // [GraphQLDescription("Unique identifier for the channel according to YouTube (External)")]
+        // public required string YoutubeId { get; set; }
 
-        [GraphQLDescription("The title of the channel")]
-        public required string Title { get; set; }
+        // [GraphQLDescription("The title of the channel")]
+        // public required string Title { get; set; }
 
         [GraphQLDescription("The videos created by this channel")]
         public virtual required ICollection<Video> Videos { get; set; }
@@ -30,7 +30,7 @@ namespace MediaTrackerYoutubeService.Models
         [GraphQLDescription("URL of the channel's thumbnail image")]
         public string? ThumbnailUrl { get; set; }
 
-        public required string ETag { get; set; }
+        // public required string ETag { get; set; }
 
         public required bool Imported { get; set; }
     }
