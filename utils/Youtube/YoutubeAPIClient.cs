@@ -8,6 +8,7 @@ using MediaTrackerYoutubeService.Schemas;
 using System.Web;
 using Azure;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace MediaTrackerYoutubeService.Utils.Youtube;
 
@@ -49,7 +50,7 @@ public class YoutubeAPIClient
                     { "key", _apiKey },
                     { "pageToken", pageToken }
                 },
-                new List<string> { "snippet", "statistics" },
+                null,
                 null
             );
 
@@ -62,7 +63,7 @@ public class YoutubeAPIClient
                     { "key", _apiKey },
                     { "pageToken", pageToken }
                 },
-                null,
+                new List<string> { "snippet", "contentDetails" },
                 null
             );
 
@@ -109,11 +110,25 @@ public class YoutubeAPIClient
             );
     }
 
-    public async Task<YoutubeAPIResponse> GetMyPlaylists(string nextPageToken = null)
+    public async Task<YoutubeAPIResponse> GetMyPlaylists(string etag, string nextPageToken = null)
     {
+        _httpClient.DefaultRequestHeaders.IfNoneMatch.Clear();
+        if (etag != "")
+        {
+            // _httpClient.DefaultRequestHeaders.IfNoneMatch.Add(new EntityTagHeaderValue("\"" + etag + "\"", isWeak: true));
+            _httpClient.DefaultRequestHeaders.IfModifiedSince = DateTime.Now;
+        }
+
         HttpResponseMessage response = await _httpClient.GetAsync(
             _endpoints.Playlists(nextPageToken)
         );
+
+        if (response.StatusCode == HttpStatusCode.NotModified)
+        {
+            Console.WriteLine("\n\n\n\nBNMDIFED");
+            return null;
+        }
+
         return await DeserializedResponse(response, YoutubeResource.Playlists);
     }
 

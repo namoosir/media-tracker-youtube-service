@@ -62,6 +62,8 @@ public class Snippet
 
     public string? videoOwnerChannelId { get; set; }
 
+    public string? videoOwnerChannelTitle { get; set; }
+
     public Thumbnails? thumbnails { get; set; }
 
     public class Thumbnails

@@ -1,34 +1,41 @@
 using MediaTrackerYoutubeService.Models;
 using MediaTrackerYoutubeService.Schemas;
 using MediaTrackerYoutubeService.Services.ChannelService;
+using MediaTrackerYoutubeService.Services.PlaylistService;
+using MediaTrackerYoutubeService.Services.VideoService;
+
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.VisualBasic;
 
 namespace MediaTrackerYoutubeService.Services.ProcessYoutubeDataService;
 
 public class ProcessYoutubeDataService : IProcessYoutubeDataService
 {
     private readonly IChannelService _channelService;
+    private readonly IVideoService _videoService;
 
-    public ProcessYoutubeDataService(IChannelService channelService)
+    private readonly IPlaylistService _playlistService;
+
+    public ProcessYoutubeDataService(
+        IChannelService channelService,
+        IVideoService videoService,
+        IPlaylistService playlistService
+    )
     {
         _channelService = channelService;
+        _videoService = videoService;
+        _playlistService = playlistService;
     }
 
     private const double REFRESH_DELAY = 10.0;
 
-    public ServiceResponse<(
-        List<Playlist>,
-        List<Playlist>,
-        List<Playlist>
-    )> ProcessYoutubePlaylists(
+    public ServiceResponse<List<Playlist>> ProcessYoutubePlaylists(
         List<Resource> playlistsExternal,
         List<Playlist> playlistsInternal,
         User user
     )
     {
-        List<Playlist> playlistsToUpdate = new List<Playlist>();
         List<Playlist> playlistsToInsert = new List<Playlist>();
-        List<Playlist> playlistsToDelete = new List<Playlist>();
 
         foreach (var pe in playlistsExternal)
         {
@@ -47,74 +54,40 @@ public class ProcessYoutubeDataService : IProcessYoutubeDataService
                 };
 
                 playlistsToInsert.Add(playlistRecord);
-                playlistsToUpdate.Add(playlistRecord);
-            }
-            //add updated element to playlistsToUpdate
-            else if (
-                (DateTime.Now - foundInternal.UpdatedAt).TotalMinutes >= REFRESH_DELAY
-                && foundInternal.ETag != pe.etag
-            )
-            {
-                foundInternal.ETag = pe.etag;
-                foundInternal.Title = pe.snippet.title;
-                playlistsToUpdate.Add(foundInternal);
             }
         }
 
-        //create list of playlists to delete
-        foreach (var pi in playlistsInternal)
-        {
-            var foundExternal = playlistsExternal.FirstOrDefault(x => x.id == pi.YoutubeId);
-
-            if (foundExternal == null)
-            {
-                playlistsToDelete.Add(pi);
-            }
-        }
-
-        return ServiceResponse<(List<Playlist>, List<Playlist>, List<Playlist>)>.Build(
-            (playlistsToInsert, playlistsToUpdate, playlistsToDelete),
-            true,
-            null
-        );
+        return ServiceResponse<List<Playlist>>.Build(playlistsToInsert, true, null);
     }
 
-    public async Task<
-        ServiceResponse<(List<Channel>, List<Channel>)>
-    > ProcessPlaylistContentCreatorChannels(List<string> channelIdsExternal)
+    public async Task<ServiceResponse<List<Channel>>> ProcessPlaylistContentCreatorChannels(
+        List<(string channelId, string channelTitle)> channelsExternal
+    )
     {
         List<Channel> channelsToInsert = new List<Channel>();
-        List<Channel> channelsToUpdate = new List<Channel>();
 
-        foreach (string channelId in channelIdsExternal)
+        foreach (var channel in channelsExternal)
         {
-            var internalChannel = (await _channelService.GetChannel(channelId)).Data;
+            var internalChannel = (await _channelService.GetChannel(channel.channelId)).Data;
 
             if (internalChannel == null)
             {
+                // Check if we have channelI
+
                 var newChannel = new Channel
                 {
-                    YoutubeId = channelId,
+                    YoutubeId = channel.channelId,
                     ETag = "",
                     Videos = new List<Video>(),
-                    Title = "",
-                    UserSubscribers = new List<User>()
+                    Title = channel.channelTitle,
+                    UserSubscribers = new List<User>(),
+                    Imported = false
                 };
-
                 channelsToInsert.Add(newChannel);
-                channelsToUpdate.Add(newChannel);
-            }
-            else if ((DateTime.Now - internalChannel.UpdatedAt).TotalMinutes >= REFRESH_DELAY)
-            {
-                channelsToUpdate.Add(internalChannel);
             }
         }
 
-        return ServiceResponse<(List<Channel>, List<Channel>)>.Build(
-            (channelsToInsert, channelsToUpdate),
-            true,
-            null
-        );
+        return ServiceResponse<List<Channel>>.Build(channelsToInsert, true, null);
     }
 
     public ServiceResponse<List<Channel>> FillOutChannelFieldsInInternalModel(
@@ -147,90 +120,208 @@ public class ProcessYoutubeDataService : IProcessYoutubeDataService
         return ServiceResponse<List<Channel>>.Build(channelsModel, true, null);
     }
 
-    public ServiceResponse<(List<Video>, List<Video>, List<Video>)> ProcessYoutubePlaylistItems(
+    // public ServiceResponse<(List<Video>, List<Video>, List<Video>)> ProcessYoutubePlaylistItems(
+    //     List<Resource> videosExternal,
+    //     Playlist playlist,
+    //     List<Channel> playlistVideoContentCreatorChannels
+    // )
+    // {
+    //     Dictionary<string, Resource> videosExternalHashMap = videosExternal.ToDictionary(
+    //         video => video.id
+    //     );
+    //     Dictionary<string, Channel> playlistVideoContentCreatorChannelsHashMap = playlistVideoContentCreatorChannels.ToDictionary(channel => channel.YoutubeId);
+
+    //     // ToInsert
+    //     List<Resource> videosToInsertResource = videosExternal
+    //         .Where(videosExternal => !videosInternalHashMap.ContainsKey(videosExternal.id))
+    //         .ToList();
+
+    //     List<Video> videosToInsertModel = videosToInsertResource
+    //         .Select(videoResource =>
+    //         {
+    //             var videoPlaylist = new List<Playlist> { playlist };
+    //             var found = playlistVideoContentCreatorChannelsHashMap.TryGetValue(
+    //                 videoResource.snippet.videoOwnerChannelId,
+    //                 out Channel contentCreatorChannelOfVideo
+    //             );
+    //             return new Video
+    //             {
+    //                 Playlist = videoPlaylist,
+    //                 Channel = contentCreatorChannelOfVideo,
+    //                 YoutubeId = videoResource.id,
+    //                 ETag = videoResource.etag,
+    //                 Title = videoResource.snippet.title,
+    //                 ThumbnailUrl = videoResource.snippet.thumbnails.Default.url ?? "",
+    //                 Imported = false,
+    //                 LikedByUsers = new List<User>(),
+    //                 DislikedByUsers = new List<User>(),
+    //             };
+    //         })
+    //         .ToList();
+
+    //     // ToUpdate
+    //     List<Video> markedVideosToUpdateModel = videosInternal
+    //         .Where(videoInternal =>
+    //         {
+    //             if ((DateTime.Now - videoInternal.UpdatedAt).TotalMinutes >= REFRESH_DELAY) return false;
+    //             if (!videosExternalHashMap.TryGetValue(videoInternal.YoutubeId,out Resource videoExternalResource)) return false;
+    //             if (videoInternal.ETag == videoExternalResource.etag) return false;
+    //             return true;
+    //         })
+    //         .ToList();
+
+    //     List<Video> videosToUpdateModelWithUpdatedFields = markedVideosToUpdateModel
+    //         .Select(videoInternal =>
+    //         {
+    //             videosExternalHashMap.TryGetValue(
+    //                 videoInternal.YoutubeId,
+    //                 out Resource videoExternalResource
+    //             );
+
+    //             videoInternal.ETag = videoExternalResource.etag;
+    //             videoInternal.ThumbnailUrl =
+    //                 videoExternalResource.snippet.thumbnails.Default.url ?? "";
+    //             videoInternal.Title = videoExternalResource.snippet.title;
+
+    //             return videoInternal;
+    //         })
+    //         .ToList();
+
+    //     // ToDelete
+    //     List<Video> videosToDelete = videosInternal
+    //         .Where(videoInternal => !videosExternalHashMap.ContainsKey(videoInternal.YoutubeId))
+    //         .ToList();
+
+    //     return ServiceResponse<(List<Video>, List<Video>, List<Video>)>.Build(
+    //         (videosToInsertModel, videosToUpdateModelWithUpdatedFields, videosToDelete),
+    //         true,
+    //         null
+    //     );
+    // }
+
+    public ServiceResponse<List<Video>> MapVideoResourceToModel(
         List<Resource> videosExternal,
-        List<Video> videosInternal,
-        Playlist playlist,
-        List<Channel> playlistVideoContentCreatorChannels
+        List<Channel> videoContentCreatorChannels
     )
     {
-        Dictionary<string, Resource> videosExternalHashMap = videosExternal.ToDictionary(
-            video => video.id
-        );
-        Dictionary<string, Video> videosInternalHashMap = videosInternal.ToDictionary(
-            video => video.YoutubeId
-        );
-        Dictionary<string, Channel> playlistVideoContentCreatorChannelsHashMap =
-            playlistVideoContentCreatorChannels.ToDictionary(channel => channel.YoutubeId);
+        Dictionary<string, Channel> videoContentCreatorChannelsHashMap =
+            videoContentCreatorChannels.ToDictionary(channel => channel.YoutubeId);
 
-        // ToInsert
-        List<Resource> videosToInsertResource = videosExternal
-            .Where(videosExternal => !videosInternalHashMap.ContainsKey(videosExternal.id))
-            .ToList();
-        List<Video> videosToInsertModel = videosToInsertResource
+        List<Video> videosToInsert = videosExternal
             .Select(videoResource =>
             {
-                var videoPlaylist = new List<Playlist> { playlist };
-                var found = playlistVideoContentCreatorChannelsHashMap.TryGetValue(
-                    videoResource.snippet.videoOwnerChannelId,
-                    out Channel contentCreatorChannelOfVideo
-                );
+                Channel contentCreatorChannelOfVideo;
+                string YouTubeId;
+                if (videoResource.snippet.videoOwnerChannelId == null)
+                {
+                    contentCreatorChannelOfVideo = videoContentCreatorChannelsHashMap[
+                        videoResource.snippet.channelId
+                    ];
+                    YouTubeId = videoResource.id;
+                }
+                else
+                {
+                    contentCreatorChannelOfVideo = videoContentCreatorChannelsHashMap[
+                        videoResource.snippet.videoOwnerChannelId
+                    ];
+                    YouTubeId = videoResource.contentDetails.videoId;
+                }
+
                 return new Video
                 {
-                    Playlist = videoPlaylist,
+                    Playlist = new List<Playlist>(),
                     Channel = contentCreatorChannelOfVideo,
-                    YoutubeId = videoResource.id,
+                    YoutubeId = YouTubeId,
                     ETag = videoResource.etag,
                     Title = videoResource.snippet.title,
-                    ThumbnailUrl = videoResource.snippet.thumbnails.Default.url ?? ""
+                    ThumbnailUrl = videoResource.snippet.thumbnails.Default.url ?? "",
+                    Imported = false,
+                    LikedByUsers = new List<User>(),
+                    DislikedByUsers = new List<User>(),
                 };
             })
             .ToList();
 
-        // ToUpdate
-        List<Video> markedVideosToUpdateModel = videosInternal
-            .Where(videoInternal =>
+        return ServiceResponse<List<Video>>.Build(videosToInsert, true, null);
+    }
+
+    public async Task<ServiceResponse<List<Resource>>> InternalVideosNotFound(
+        List<Resource> videosExternal
+    )
+    {
+        var serviceResponse = new ServiceResponse<List<Resource>>();
+
+        try
+        {
+            var videoIds = videosExternal.Select(x => x.id).ToList();
+            var videoServiceResponse = await _videoService.VideosNotFound(videoIds);
+
+            if (!videoServiceResponse.Success)
+                throw new Exception("Something went wrong");
+
+            var videoIdsToInsert = videoServiceResponse.Data;
+
+            var resourcesToInsert = videosExternal.Where(x => videoIdsToInsert.Contains(x.id));
+            serviceResponse.Data = resourcesToInsert.ToList();
+        }
+        catch (Exception e)
+        {
+            serviceResponse.Success = false;
+            serviceResponse.Message = e.Message;
+        }
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse<List<Playlist>> MapPlaylistResourceToModel(
+        List<Resource> playlistsExternal,
+        User userPlaylistOwner
+    )
+    {
+        List<Playlist> playlistsToInsert = playlistsExternal
+            .Select(playlistResource =>
             {
-                // if ((DateTime.Now - videoInternal.UpdatedAt).TotalMinutes >= REFRESH_DELAY) return false;
-                if (
-                    !videosExternalHashMap.TryGetValue(
-                        videoInternal.YoutubeId,
-                        out Resource videoExternalResource
-                    )
-                )
-                    return false;
-                if (videoInternal.ETag == videoExternalResource.etag)
-                    return false;
-                return true;
+                return new Playlist
+                {
+                    User = userPlaylistOwner,
+                    YoutubeId = playlistResource.id,
+                    ETag = playlistResource.etag,
+                    Title = playlistResource.snippet.title,
+                    Videos = new List<Video>()
+                };
             })
             .ToList();
 
-        List<Video> videosToUpdateModelWithUpdatedFields = markedVideosToUpdateModel
-            .Select(videoInternal =>
-            {
-                videosExternalHashMap.TryGetValue(
-                    videoInternal.YoutubeId,
-                    out Resource videoExternalResource
-                );
+        return ServiceResponse<List<Playlist>>.Build(playlistsToInsert, true, null);
+    }
 
-                videoInternal.ETag = videoExternalResource.etag;
-                videoInternal.ThumbnailUrl =
-                    videoExternalResource.snippet.thumbnails.Default.url ?? "";
-                videoInternal.Title = videoExternalResource.snippet.title;
+    public async Task<ServiceResponse<List<Resource>>> InternalPlaylistsNotFound(
+        List<Resource> playlistsExternal
+    )
+    {
+        var serviceResponse = new ServiceResponse<List<Resource>>();
 
-                return videoInternal;
-            })
-            .ToList();
+        try
+        {
+            var playlistIds = playlistsExternal.Select(x => x.id).ToList();
+            var playlistServiceResponse = await _playlistService.PlaylistsNotFound(playlistIds);
 
-        // ToDelete
-        List<Video> videosToDelete = videosInternal
-            .Where(videoInternal => !videosExternalHashMap.ContainsKey(videoInternal.YoutubeId))
-            .ToList();
+            if (!playlistServiceResponse.Success)
+                throw new Exception("Something went wrong");
 
-        return ServiceResponse<(List<Video>, List<Video>, List<Video>)>.Build(
-            (videosToInsertModel, videosToUpdateModelWithUpdatedFields, videosToDelete),
-            true,
-            null
-        );
+            var playlistIdsToInsert = playlistServiceResponse.Data;
+
+            var resourcesToInsert = playlistsExternal.Where(
+                x => playlistIdsToInsert.Contains(x.id)
+            );
+            serviceResponse.Data = resourcesToInsert.ToList();
+        }
+        catch (Exception e)
+        {
+            serviceResponse.Success = false;
+            serviceResponse.Message = e.Message;
+        }
+
+        return serviceResponse;
     }
 }

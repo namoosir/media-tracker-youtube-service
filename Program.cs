@@ -6,6 +6,11 @@ using MediaTrackerYoutubeService.Services.ProcessYoutubeDataService;
 using MediaTrackerYoutubeService.Services.StoreYoutubeDataService;
 using MediaTrackerYoutubeService.Middleware;
 using Microsoft.EntityFrameworkCore;
+using MediaTrackerYoutubeService.Services.DataSynchronizationService;
+using MediaTrackerYoutubeService.Services.PlaylistService;
+using MediaTrackerYoutubeService.Services.UserService;
+using MediaTrackerYoutubeService.Services.VideoService;
+using MediaTrackerYoutubeService.Services.ChannelService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +22,10 @@ builder.Services.AddPooledDbContextFactory<AppDbContext>(
         options
             .UseLazyLoadingProxies()
             .UseSqlServer(builder.Configuration.GetConnectionString("DBConnectionString"))
+);
+
+builder.Services.AddDbContext<AppDbContext>(
+    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DBConnectionString"))
 );
 
 builder.Services
@@ -53,10 +62,16 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddHttpClient();
+
 builder.Services.AddScoped<IAuthTokenExchangeService, AuthTokenExchangeService>();
 builder.Services.AddScoped<IFetchYoutubeDataService, FetchYoutubeDataService>();
+builder.Services.AddScoped<IChannelService, ChannelService>();
 builder.Services.AddScoped<IProcessYoutubeDataService, ProcessYoutubeDataService>();
 builder.Services.AddScoped<IStoreYoutubeDataService, StoreYoutubeDataService>();
+builder.Services.AddScoped<IDataSynchronizationService, DataSynchronizationService>();
+builder.Services.AddScoped<IPlaylistService, PlaylistService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IVideoService, VideoService>();
 
 var app = builder.Build();
 

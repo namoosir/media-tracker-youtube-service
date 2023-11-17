@@ -40,7 +40,7 @@ public class YoutubeAPIClientTests
     {
         YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
 
-        YoutubeAPIResponse response = await client.GetMyPlaylists();
+        YoutubeAPIResponse response = await client.GetMyPlaylists("S");
 
         Assert.IsNotNull(response);
     }
