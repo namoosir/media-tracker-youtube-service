@@ -1,6 +1,8 @@
 using MediaTrackerYoutubeService.Data;
+using MediaTrackerYoutubeService.Dtos.Video;
 using MediaTrackerYoutubeService.Models;
 using Microsoft.EntityFrameworkCore;
+using static MediaTrackerYoutubeService.Constants;
 
 namespace MediaTrackerYoutubeService.Services.VideoService;
 
@@ -48,9 +50,9 @@ public class VideoService : IVideoService
         return serviceResponse;
     }
 
-    public async Task<ServiceResponse<List<Video>>> UpdateVideo(List<Video> videos)
+    public async Task<ServiceResponse<List<Video>>> UpdateVideo(List<UpdateVideoDto> videos)
     {
-        var serviceResponse = new ServiceResponse<List<Video>>();
+        var serviceResponse = new ServiceResponse<List<Video>> { Data = new List<Video>() };
 
         try
         {
@@ -67,18 +69,24 @@ public class VideoService : IVideoService
                     );
                 }
 
-                foundVideo.Title = video.Title;
-                foundVideo.ViewCount = video.ViewCount;
-                foundVideo.LikeCount = video.LikeCount;
-                foundVideo.CommentCount = video.CommentCount;
-                foundVideo.ThumbnailUrl = video.ThumbnailUrl;
-                foundVideo.ETag = video.ETag;
-                foundVideo.Imported = video.Imported;
+                if (video.Title != null)
+                    foundVideo.Title = video.Title;
+                if (video.ViewCount != null)
+                    foundVideo.ViewCount = video.ViewCount;
+                if (video.LikeCount != null)
+                    foundVideo.LikeCount = video.LikeCount;
+                if (video.CommentCount != null)
+                    foundVideo.CommentCount = video.CommentCount;
+                if (video.ThumbnailUrl != null)
+                    foundVideo.ThumbnailUrl = video.ThumbnailUrl;
+                if (video.ETag != null)
+                    foundVideo.ETag = video.ETag;
+                if (video.Imported != null)
+                    foundVideo.Imported = (bool)video.Imported;
 
                 await _context.SaveChangesAsync();
+                serviceResponse.Data.Add(foundVideo);
             }
-
-            serviceResponse.Data = videos;
         }
         catch (Exception e)
         {
@@ -134,6 +142,45 @@ public class VideoService : IVideoService
             serviceResponse.Message = e.Message;
         }
 
+        return serviceResponse;
+    }
+
+    public async Task<ServiceResponse<List<string>>> GetPendingVideos()
+    {
+        var serviceResponse = new ServiceResponse<List<string>>();
+
+        try
+        {
+            serviceResponse.Data = await _context.Videos
+                .Where(v => v.Imported == false)
+                .Select(v => v.YoutubeId)
+                .ToListAsync();
+        }
+        catch (Exception e)
+        {
+            serviceResponse.Success = false;
+            serviceResponse.Message = e.Message;
+        }
+        return serviceResponse;
+    }
+
+    public async Task<ServiceResponse<List<string>>> GetOutOfDateVideos()
+    {
+        var serviceResponse = new ServiceResponse<List<string>>();
+
+        try
+        {
+            var cutoffTimestamp = DateTime.Now.AddMinutes(-RESOURCE_REFRESH_DELAY);
+            serviceResponse.Data = await _context.Videos
+                .Where(v => v.UpdatedAt < cutoffTimestamp)
+                .Select(v => v.YoutubeId)
+                .ToListAsync();
+        }
+        catch (Exception e)
+        {
+            serviceResponse.Success = false;
+            serviceResponse.Message = e.Message;
+        }
         return serviceResponse;
     }
 }

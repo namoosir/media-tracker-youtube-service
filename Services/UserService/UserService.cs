@@ -33,7 +33,8 @@ public class UserService : IUserService
                 DislikedVideos = new List<Video>(),
                 LikedVideosEtag = "",
                 LikedVideos = new List<Video>(),
-                SubscribedChannels = new List<Channel>()
+                SubscribedChannels = new List<Channel>(),
+                SubscriptionsEtag = ""
             };
 
             _context.Users.Add(newUser);
@@ -105,6 +106,8 @@ public class UserService : IUserService
                 found.LikedVideosEtag = updateUser.LikedVideosEtag;
             if (updateUser.DislikedVideosEtag != null)
                 found.DislikedVideosEtag = updateUser.DislikedVideosEtag;
+            if (updateUser.SubscriptionsEtag != null)
+                found.SubscriptionsEtag = updateUser.SubscriptionsEtag;
             if (updateUser.UpdatedAt != null)
                 found.UpdatedAt = (DateTime)updateUser.UpdatedAt;
 

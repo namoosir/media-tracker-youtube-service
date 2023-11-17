@@ -72,57 +72,151 @@ public class FetchYoutubeDataService : IFetchYoutubeDataService
 
     public async Task<ServiceResponse<List<Resource>>> FetchChannels(
         YoutubeAPIClient client,
-        List<Channel> channelsToUpdate
+        List<string> channelIds
     )
     {
-        List<string> channelIdsToUpdate = channelsToUpdate
-            .Select(channel => channel.YoutubeId)
-            .ToList();
+        var serviceResponse = new ServiceResponse<List<Resource>>();
 
         int blockSize = 50;
-        List<List<string>> channelIdsToUpdateBlocks = Enumerable
-            .Range(0, (channelIdsToUpdate.Count + blockSize - 1) / blockSize)
-            .Select(i => channelIdsToUpdate.Skip(i * blockSize).Take(blockSize).ToList())
+        List<List<string>> channelIdsBlocks = Enumerable
+            .Range(0, (channelIds.Count + blockSize - 1) / blockSize)
+            .Select(i => channelIds.Skip(i * blockSize).Take(blockSize).ToList())
             .ToList();
 
-        List<Resource> channelsToUpdateResource = new List<Resource>();
-        foreach (List<string> channelIdsBlock in channelIdsToUpdateBlocks)
+        try
         {
-            if (channelIdsBlock.Count != 0)
-            {
-                var getChannelsResponse = await client.GetChannels(channelIdsBlock);
-                channelsToUpdateResource.AddRange(getChannelsResponse.items);
-            }
-        }
+            List<Resource> channelsResource = new List<Resource>();
 
-        return ServiceResponse<List<Resource>>.Build(channelsToUpdateResource, true, null);
+            foreach (List<string> channelIdsBlock in channelIdsBlocks)
+            {
+                if (channelIdsBlock.Count != 0)
+                {
+                    var getChannelsResponse = await client.GetChannels(channelIdsBlock);
+                    channelsResource.AddRange(getChannelsResponse.items);
+                }
+            }
+            serviceResponse.Data = channelsResource;
+        }
+        catch (Exception e)
+        {
+            serviceResponse.Success = false;
+            serviceResponse.Message = e.Message;
+        }
+        return serviceResponse;
+    }
+
+    public async Task<ServiceResponse<List<Resource>>> FetchVideos(
+        YoutubeAPIClient client,
+        List<string> videoIds
+    )
+    {
+        var serviceResponse = new ServiceResponse<List<Resource>>();
+
+        int blockSize = 50;
+        List<List<string>> videoIdsToUpdateBlocks = Enumerable
+            .Range(0, (videoIds.Count + blockSize - 1) / blockSize)
+            .Select(i => videoIds.Skip(i * blockSize).Take(blockSize).ToList())
+            .ToList();
+
+        try
+        {
+            var result = new List<Resource>();
+
+            foreach (List<string> videoIdsBlock in videoIdsToUpdateBlocks)
+            {
+                if (videoIdsBlock.Count != 0)
+                {
+                    var getVideosResponse = await client.GetVideos(videoIdsBlock);
+                    result.AddRange(getVideosResponse.items);
+                }
+            }
+
+            serviceResponse.Data = result;
+        }
+        catch (Exception e)
+        {
+            serviceResponse.Success = false;
+            serviceResponse.Message = e.Message;
+        }
+        return serviceResponse;
+    }
+
+    public async Task<ServiceResponse<(List<Resource> items, string etag)>> FetchSubscriptions(
+        YoutubeAPIClient client,
+        string internalEtag
+    )
+    {
+        try
+        {
+            List<Resource> SubscriptionsExternal = new();
+            var SubscriptionsResponse = await client.GetSubscriptions();
+            var etag = SubscriptionsResponse.etag;
+            if (etag == internalEtag)
+                return ServiceResponse<(List<Resource> items, string etag)>.Build(
+                    (SubscriptionsExternal, etag),
+                    true,
+                    null
+                );
+
+            SubscriptionsExternal.AddRange(SubscriptionsResponse.items);
+
+            while (SubscriptionsResponse.nextPageToken != null)
+            {
+                SubscriptionsResponse = await client.GetMyPlaylistItems(
+                    SubscriptionsResponse.nextPageToken
+                );
+                SubscriptionsExternal.AddRange(SubscriptionsResponse.items);
+            }
+
+            return ServiceResponse<(List<Resource> items, string etag)>.Build(
+                (SubscriptionsExternal, etag),
+                true,
+                null
+            );
+        }
+        catch (Exception e)
+        {
+            return ServiceResponse<(List<Resource> items, string etag)>.Build(
+                (null, null),
+                false,
+                e.ToString()
+            );
+        }
     }
 
     public async Task<
         ServiceResponse<(List<Resource> items, string etag)>
-    > FetchExternalLikedVideos(YoutubeAPIClient client)
+    > FetchExternalRatedVideos(
+        YoutubeAPIClient client,
+        YoutubeAPIClient.Rating rating,
+        string internalEtag
+    )
     {
         var serviceResponse = new ServiceResponse<(List<Resource>, string)>();
 
         try
         {
-            var likedVideosExternal = new List<Resource>();
-            var likedVideosResponse = await client.GetRatedVideos((YoutubeAPIClient.Rating)0);
-            var likedVideosEtag = likedVideosResponse.etag;
-            Console.WriteLine("\n\n\n\n\n\n\n" + likedVideosEtag);
+            var ratedVideosExternal = new List<Resource>();
+            var ratedVideosResponse = await client.GetRatedVideos(rating);
+            var etag = ratedVideosResponse.etag;
 
-            likedVideosExternal.AddRange(likedVideosResponse.items);
-
-            while (likedVideosResponse.nextPageToken != null)
+            if (etag == internalEtag)
             {
-                likedVideosResponse = await client.GetRatedVideos(
-                    (YoutubeAPIClient.Rating)0,
-                    likedVideosResponse.nextPageToken
-                );
-                likedVideosExternal.AddRange(likedVideosResponse.items);
+                serviceResponse.Data = (ratedVideosExternal, etag);
+                return serviceResponse;
             }
 
-            serviceResponse.Data = (likedVideosExternal, likedVideosEtag);
+            ratedVideosExternal.AddRange(ratedVideosResponse.items);
+            while (ratedVideosResponse.nextPageToken != null)
+            {
+                ratedVideosResponse = await client.GetRatedVideos(
+                    rating,
+                    ratedVideosResponse.nextPageToken
+                );
+                ratedVideosExternal.AddRange(ratedVideosResponse.items);
+            }
+
+            serviceResponse.Data = (ratedVideosExternal, etag);
         }
         catch (Exception e)
         {
@@ -133,39 +227,72 @@ public class FetchYoutubeDataService : IFetchYoutubeDataService
         return serviceResponse;
     }
 
-    public async Task<
-        ServiceResponse<(List<Resource> items, string etag)>
-    > FetchExternalDislikedVideos(YoutubeAPIClient client)
-    {
-        var serviceResponse = new ServiceResponse<(List<Resource> items, string etag)>();
+    // public async Task<
+    //     ServiceResponse<(List<Resource> items, string etag)>
+    // > FetchExternalLikedVideos(YoutubeAPIClient client)
+    // {
+    //     var serviceResponse = new ServiceResponse<(List<Resource>, string)>();
 
-        try
-        {
-            var dislikedVideosExternal = new List<Resource>();
-            var dislikedVideosResponse = await client.GetRatedVideos((YoutubeAPIClient.Rating)1);
-            var dislikedVideosEtag = dislikedVideosResponse.etag;
+    //     try
+    //     {
+    //         var likedVideosExternal = new List<Resource>();
+    //         var likedVideosResponse = await client.GetRatedVideos((YoutubeAPIClient.Rating)0);
+    //         var likedVideosEtag = likedVideosResponse.etag;
 
-            Console.WriteLine("\n\n\n\n\n\n\n" + dislikedVideosEtag);
+    //         likedVideosExternal.AddRange(likedVideosResponse.items);
 
-            dislikedVideosExternal.AddRange(dislikedVideosResponse.items);
+    //         while (likedVideosResponse.nextPageToken != null)
+    //         {
+    //             likedVideosResponse = await client.GetRatedVideos(
+    //                 (YoutubeAPIClient.Rating)0,
+    //                 likedVideosResponse.nextPageToken
+    //             );
+    //             likedVideosExternal.AddRange(likedVideosResponse.items);
+    //         }
 
-            while (dislikedVideosResponse.nextPageToken != null)
-            {
-                dislikedVideosResponse = await client.GetRatedVideos(
-                    (YoutubeAPIClient.Rating)1,
-                    dislikedVideosResponse.nextPageToken
-                );
-                dislikedVideosExternal.AddRange(dislikedVideosResponse.items);
-            }
+    //         serviceResponse.Data = (likedVideosExternal, likedVideosEtag);
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         serviceResponse.Success = false;
+    //         serviceResponse.Message = e.Message;
+    //     }
 
-            serviceResponse.Data = (dislikedVideosExternal, dislikedVideosEtag);
-        }
-        catch (Exception e)
-        {
-            serviceResponse.Success = false;
-            serviceResponse.Message = e.Message;
-        }
+    //     return serviceResponse;
+    // }
 
-        return serviceResponse;
-    }
+    // public async Task<
+    //     ServiceResponse<(List<Resource> items, string etag)>
+    // > FetchExternalDislikedVideos(YoutubeAPIClient client)
+    // {
+    //     var serviceResponse = new ServiceResponse<(List<Resource> items, string etag)>();
+
+    //     try
+    //     {
+    //         var dislikedVideosExternal = new List<Resource>();
+    //         var dislikedVideosResponse = await client.GetRatedVideos((YoutubeAPIClient.Rating)1);
+    //         var dislikedVideosEtag = dislikedVideosResponse.etag;
+
+
+    //         dislikedVideosExternal.AddRange(dislikedVideosResponse.items);
+
+    //         while (dislikedVideosResponse.nextPageToken != null)
+    //         {
+    //             dislikedVideosResponse = await client.GetRatedVideos(
+    //                 (YoutubeAPIClient.Rating)1,
+    //                 dislikedVideosResponse.nextPageToken
+    //             );
+    //             dislikedVideosExternal.AddRange(dislikedVideosResponse.items);
+    //         }
+
+    //         serviceResponse.Data = (dislikedVideosExternal, dislikedVideosEtag);
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         serviceResponse.Success = false;
+    //         serviceResponse.Message = e.Message;
+    //     }
+
+    //     return serviceResponse;
+    // }
 }

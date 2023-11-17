@@ -15,6 +15,11 @@ using MediaTrackerYoutubeService.Services.VideoService;
 using MediaTrackerYoutubeService.Services.PlaylistService;
 using MediaTrackerYoutubeService.Dtos.User;
 using MediaTrackerYoutubeService.Dtos.Playlist;
+using static MediaTrackerYoutubeService.Utils.ServiceResponseUtils;
+using MediaTrackerYoutubeService.Dtos.Video;
+using MediaTrackerYoutubeService.Dtos.Channel;
+using static MediaTrackerYoutubeService.Utils.Youtube.YoutubeAPIClient;
+using static MediaTrackerYoutubeService.Constants;
 
 namespace MediaTrackerYoutubeService.Services.DataSynchronizationService;
 
@@ -33,8 +38,6 @@ public class DataSynchronizationService : IDataSynchronizationService
     private readonly IVideoService _videoService;
 
     private readonly IPlaylistService _playlistService;
-
-    private const double REFRESH_DELAY = 10.0;
 
     public DataSynchronizationService(
         IAuthTokenExchangeService authTokenExchangeService,
@@ -59,38 +62,32 @@ public class DataSynchronizationService : IDataSynchronizationService
         _playlistService = playlistService;
     }
 
-    public async Task<ServiceResponse<string>> ImportVideoAndChannelStatistics(int userId)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<ServiceResponse<string>> SyncData(int userId)
     {
         var serviceResponse = new ServiceResponse<string>();
 
         try
         {
-            if (!(await _userService.UpsertUser(userId)).Success)
-                throw new Exception("Failed to add new user or confirm exisiting user");
-
+            User user = TryGetThrow(
+                await _userService.UpsertUser(userId),
+                "Failed to add new user or confirm exisiting user"
+            );
             // //get user
-            // var foundUser = await _userService.GetUser(userId);
-            // if (!foundUser.Success)
-            //     throw new Exception("Failed to get user");
+
 
             // //check time
-            // if ((DateTime.Now - foundUser.Data.UpdatedAt).TotalMinutes < REFRESH_DELAY)
+            // if ((DateTime.Now - user.UpdatedAt).TotalMinutes < USER_REFRESH_DELAY)
             // {
             //     serviceResponse.Data = "Didn't perform sync, not enough time has passed since the last sync";
             //     return serviceResponse;
             // }
 
-            var tokenResult = await _authTokenExchangeService.YoutubeAuthTokenExchange(userId);
 
-            if (!tokenResult.Success)
-                throw new Exception("Failed to get youtube token");
+            var access_token = TryGetThrow(
+                await _authTokenExchangeService.YoutubeAuthTokenExchange(userId),
+                "Failed to get youtube token"
+            );
 
-            var access_token = tokenResult.Data;
             var apiKey =
                 _configuration["YoutubeAPIKey"] ?? throw new Exception("Missing ApiKey in Config");
 
@@ -98,15 +95,19 @@ public class DataSynchronizationService : IDataSynchronizationService
 
             Console.WriteLine(access_token);
 
-            await Task.WhenAll(
-                SyncPlaylistsAndAssociatedVideos(userId, client)
-            // SyncSubscriptionsAndAssociatedChannels(userId, client)
-            // SyncLikedAndDislikedVideos(userId, client)
-            );
+            // Issue with SharedContext. Need Seperate Contexts for each
+            // await Task.WhenAll(
+            //     SyncPlaylistsAndAssociatedVideos(userId, client),
 
+            //     SyncLikedAndDislikedVideos(userId, client)
+            // );
+
+            // await SyncSubscriptionsAndAssociatedChannels(user, client);
+            // await SyncPlaylistsAndAssociatedVideos(user, client);
+            // await SyncLikedAndDislikedVideos(user, client);
+            // await ImportPendingVideosAndChannelStatistics(client);
+            await ImportVideoAndChannelStatistics(client);
             // user.UpdateAt = DateNow
-
-
 
             serviceResponse.Data = "Synced successfully!";
         }
@@ -119,47 +120,188 @@ public class DataSynchronizationService : IDataSynchronizationService
         return serviceResponse;
     }
 
-    private async Task SyncPlaylistsAndAssociatedVideos(int userId, YoutubeAPIClient client)
+    public async Task<ServiceResponse<string>> ImportVideoAndChannelStatistics(
+        YoutubeAPIClient client
+    )
     {
-        var getUserResponse = await _userService.GetUser(userId);
-        if (!getUserResponse.Success)
-            throw new Exception("Failed to get User");
-        var user = getUserResponse!.Data;
+        var serviceResponse = new ServiceResponse<string>();
 
-        var fetchExternalPlaylistsResult = await _fetchYoutubeDataService.FetchExternalPlaylists(
-            user.PlaylistsEtag,
-            client
+        try
+        {
+            var videosToUpdate = new List<UpdateVideoDto>();
+            var channelsToUpdate = new List<UpdateChannelDto>();
+
+            var outOfDateVideos = TryGetThrow(await _videoService.GetOutOfDateVideos());
+            var outOfDateChannels = TryGetThrow(await _channelService.GetOutOfDateChannels());
+            Console.WriteLine(outOfDateChannels.Count + "\n\n\n\n\nsdfds ");
+            var externalOutOfDateVideos = TryGetThrow(
+                await _fetchYoutubeDataService.FetchVideos(client, outOfDateVideos)
+            );
+            var externalOutOfDateChannels = TryGetThrow(
+                await _fetchYoutubeDataService.FetchChannels(client, outOfDateChannels)
+            );
+
+            var videoIdToResource = externalOutOfDateVideos.ToDictionary(resource => resource.id);
+
+            var channelIdToResource = externalOutOfDateChannels.ToDictionary(
+                resource => resource.id
+            );
+
+            outOfDateVideos.ForEach(id =>
+            {
+                var resource = videoIdToResource[id];
+                var videoDto = new UpdateVideoDto
+                {
+                    YoutubeId = id,
+                    Title = resource.snippet.title,
+                    ViewCount = resource.statistics.viewCount,
+                    LikeCount = resource.statistics.likeCount,
+                    CommentCount = resource.statistics.commentCount,
+                    ThumbnailUrl = resource.snippet.thumbnails.Default.url,
+                    Imported = true
+                };
+                videosToUpdate.Add(videoDto);
+            });
+
+            outOfDateChannels.ForEach(id =>
+            {
+                var resource = channelIdToResource[id];
+                var channelDto = new UpdateChannelDto
+                {
+                    YoutubeId = id,
+                    Title = resource.snippet.title,
+                    SubscriberCount = resource.statistics.subscriberCount,
+                    ViewCount = resource.statistics.viewCount,
+                    VideoCount = resource.statistics.videoCount,
+                    ThumbnailUrl = resource.snippet.thumbnails.Default.url,
+                    Imported = true
+                };
+                channelsToUpdate.Add(channelDto);
+            });
+
+            Console.WriteLine(
+                channelsToUpdate.Count
+                    + channelsToUpdate[0].Title
+                    + channelsToUpdate[0].ViewCount
+                    + "\n\n\n\n\nsdfds "
+            );
+
+            await _videoService.UpdateVideo(videosToUpdate);
+            await _channelService.UpdateChannel(channelsToUpdate);
+
+            serviceResponse.Data = "Success";
+        }
+        catch (Exception e)
+        {
+            serviceResponse.Success = true;
+            serviceResponse.Message = e.Message;
+            Console.WriteLine("ERROR " + e.Message);
+        }
+        return serviceResponse;
+    }
+
+    public async Task<ServiceResponse<string>> ImportPendingVideosAndChannelStatistics(
+        YoutubeAPIClient client
+    )
+    {
+        Console.WriteLine("DSFJCKDSLKCMKLD\n\n\n\n");
+        var serviceResponse = new ServiceResponse<string>();
+
+        try
+        {
+            var videosToUpdate = new List<UpdateVideoDto>();
+            var channelsToUpdate = new List<UpdateChannelDto>();
+
+            var pendingVideos = TryGetThrow(await _videoService.GetPendingVideos());
+            var pendingChannels = TryGetThrow(await _channelService.GetPendingChannels());
+
+            var externalPendingVideos = TryGetThrow(
+                await _fetchYoutubeDataService.FetchVideos(client, pendingVideos)
+            );
+            var externalPendingChannels = TryGetThrow(
+                await _fetchYoutubeDataService.FetchChannels(client, pendingChannels)
+            );
+
+            Dictionary<string, Resource> videoIdToResource = externalPendingVideos.ToDictionary(
+                resource => resource.id
+            );
+
+            Dictionary<string, Resource> channelIdToResource = externalPendingChannels.ToDictionary(
+                resource => resource.id
+            );
+
+            pendingVideos.ForEach(id =>
+            {
+                var resource = videoIdToResource[id];
+                var videoDto = new UpdateVideoDto
+                {
+                    YoutubeId = id,
+                    Title = resource.snippet.title,
+                    ViewCount = resource.statistics.viewCount,
+                    LikeCount = resource.statistics.likeCount,
+                    CommentCount = resource.statistics.commentCount,
+                    ThumbnailUrl = resource.snippet.thumbnails.Default.url,
+                    Imported = true
+                };
+                videosToUpdate.Add(videoDto);
+            });
+
+            pendingChannels.ForEach(id =>
+            {
+                var resource = channelIdToResource[id];
+                var channelDto = new UpdateChannelDto
+                {
+                    YoutubeId = id,
+                    Title = resource.snippet.title,
+                    SubscriberCount = resource.statistics.subscriberCount,
+                    ViewCount = resource.statistics.viewCount,
+                    VideoCount = resource.statistics.videoCount,
+                    ThumbnailUrl = resource.snippet.thumbnails.Default.url,
+                    Imported = true
+                };
+                channelsToUpdate.Add(channelDto);
+            });
+            Console.WriteLine("dsfgsfdgf\n\n\n\n");
+            await _videoService.UpdateVideo(videosToUpdate);
+            await _channelService.UpdateChannel(channelsToUpdate);
+
+            serviceResponse.Data = "Success!";
+        }
+        catch (Exception e)
+        {
+            serviceResponse.Success = true;
+            serviceResponse.Message = e.Message;
+            Console.WriteLine("ERROR " + e.Message);
+        }
+        return serviceResponse;
+    }
+
+    private async Task SyncPlaylistsAndAssociatedVideos(User user, YoutubeAPIClient client)
+    {
+        var (playlistsExternal, playlistsEtag) = TryGetThrow(
+            await _fetchYoutubeDataService.FetchExternalPlaylists(user.PlaylistsEtag, client)
         );
-        if (!fetchExternalPlaylistsResult.Success)
-            throw new Exception(fetchExternalPlaylistsResult.Message);
-        var (playlistsExternal, playlistsEtag) = fetchExternalPlaylistsResult.Data;
         if (playlistsEtag == user.PlaylistsEtag)
             return;
 
-        var notFoundInternalPlaylistsResponse =
-            await _processYoutubeDataService.InternalPlaylistsNotFound(playlistsExternal);
-        if (!notFoundInternalPlaylistsResponse.Success)
-            throw new Exception("Something went wrong");
-        var notFoundInternalPlaylists = notFoundInternalPlaylistsResponse.Data;
+        var notFoundInternalPlaylists = TryGetThrow(
+            await _processYoutubeDataService.InternalPlaylistsNotFound(playlistsExternal)
+        );
 
         var playlistsToInsert = _processYoutubeDataService
             .MapPlaylistResourceToModel(notFoundInternalPlaylists, user)
             .Data;
-
         await _storeYoutubeDataService.StorePlaylists(playlistsToInsert);
 
         var playlistsExternalIds = playlistsExternal.Select(playlist => playlist.id).ToList();
-        var playlistsExternalModelsResponse = await _playlistService.GetPlaylist(
-            playlistsExternalIds
+        var playlistsExternalModels = TryGetThrow(
+            await _playlistService.GetPlaylist(playlistsExternalIds),
+            "Failed to get playlists"
         );
-        if (!playlistsExternalModelsResponse.Success)
-            throw new Exception("Failed to get playlists");
-
-        var playlistsExternalModels = playlistsExternalModelsResponse.Data;
 
         var updateUserDto = new UpdateUserDto
         {
-            UserId = userId,
+            UserId = user.UserId,
             PlaylistsEtag = playlistsEtag,
             VideoPlaylists = playlistsExternalModels
         };
@@ -188,46 +330,21 @@ public class DataSynchronizationService : IDataSynchronizationService
     {
         foreach (Playlist playlist in userPlaylists)
         {
-            // playlistVideosExteral = fetch
-            // compute videosNotFoundInternally
-            // Import their Channels if not in INternally
-            // Import them add new Row
-            // Playlist.upsert relationship(playlistVideosExtneral)
-            // Or Playlists.Videos = playlistVideosExtneral
-
-
-            // List<Video> playlistVideosInternal = playlist.Videos.ToList();
-            // Dictionary<string, Video> playlistVideosInternalHashMap = playlistVideosInternal.ToDictionary(video => video.YoutubeId);
-
-            List<Resource> playlistVideosExternal = (
+            List<Resource> playlistVideosExternal = TryGetThrow(
                 await _fetchYoutubeDataService.FetchExternalPlaylistVideos(
                     client,
                     playlist.YoutubeId
                 )
-            ).Data;
+            );
             playlistVideosExternal.ForEach(video => video.id = video.contentDetails.videoId);
+
+            await ImportNonInternalVideos(playlistVideosExternal, client);
+
             List<string> playlistVideoIds = playlistVideosExternal
                 .Select(resource => resource.contentDetails.videoId)
                 .ToList();
 
-            List<Resource> videosToImportResource = (
-                await _processYoutubeDataService.InternalVideosNotFound(playlistVideosExternal)
-            ).Data;
-
-            List<Channel> videosToImportContentCreators = await SyncVideoContentCreatorChannels(
-                videosToImportResource,
-                client
-            );
-
-            List<Video> videosToInsert = _processYoutubeDataService
-                .MapVideoResourceToModel(videosToImportResource, videosToImportContentCreators)
-                .Data;
-            //
-            await _storeYoutubeDataService.StoreVideos(videosToInsert);
-
-            // Set playlist-video relationship
-
-            var playlistVideos = (await _videoService.GetVideos(playlistVideoIds)).Data;
+            var playlistVideos = TryGetThrow(await _videoService.GetVideos(playlistVideoIds));
 
             var updatePlaylistDto = new UpdatePlaylistDto
             {
@@ -250,12 +367,17 @@ public class DataSynchronizationService : IDataSynchronizationService
         if (videosExternal.Count == 0)
             return new List<Channel>();
 
-        List<(string channelId, string channelTitle)> channelsExternal = new();
+        List<(string? channelId, string? channelTitle)> channelsExternal = new();
 
         if (videosExternal[0].snippet.videoOwnerChannelId is null)
         {
             channelsExternal = videosExternal
-                .Select(v => (v.snippet.channelId, v.snippet.channelTitle))
+                .Select(v =>
+                {
+                    string channelTitle = v.snippet.channelTitle ?? v.snippet.title;
+                    string channelId = v.snippet.resourceId?.channelId ?? v.snippet.channelId;
+                    return (channelId, channelTitle);
+                })
                 .Distinct()
                 .ToList();
         }
@@ -267,110 +389,103 @@ public class DataSynchronizationService : IDataSynchronizationService
                 .ToList();
         }
 
-        var channelsToInsert = (
+        foreach (var channel in channelsExternal)
+        {
+            Console.WriteLine("\n" + channel.channelId + "  dd   " + channel.channelTitle);
+        }
+
+        var channelsToInsert = TryGetThrow(
             await _processYoutubeDataService.ProcessPlaylistContentCreatorChannels(channelsExternal)
-        ).Data;
+        );
+
         await _storeYoutubeDataService.StoreChannels(channelsToInsert);
 
         // List Of ContentCreators for ExternalVideos
-        return (
+        return TryGetThrow(
             await _channelService.GetChannel(channelsExternal.Select(c => c.channelId).ToList())
-        ).Data;
+        );
     }
 
-    private async Task SyncSubscriptionsAndAssociatedChannels(int userId, YoutubeAPIClient client)
+    private async Task SyncSubscriptionsAndAssociatedChannels(User user, YoutubeAPIClient client)
     {
-        throw new NotImplementedException();
+        var (subscriptionsExternal, externalEtag) = TryGetThrow(
+            await _fetchYoutubeDataService.FetchSubscriptions(client, user.SubscriptionsEtag)
+        );
+        if (user.SubscriptionsEtag == externalEtag)
+            return;
+
+        var channelsExternal = await SyncVideoContentCreatorChannels(subscriptionsExternal, client);
+
+        UpdateUserDto updateUserDto =
+            new()
+            {
+                UserId = user.UserId,
+                SubscribedChannels = channelsExternal,
+                SubscriptionsEtag = externalEtag
+            };
+        await _userService.UpdateUser(updateUserDto);
     }
 
-    private async Task SyncLikedAndDislikedVideos(int userId, YoutubeAPIClient client)
+    private async Task ImportNonInternalVideos(
+        List<Resource> externalVideos,
+        YoutubeAPIClient client
+    )
     {
-        UpdateUserDto updateUserDto = new() { UserId = userId };
-
-        var likedVideosExternal = await _fetchYoutubeDataService.FetchExternalLikedVideos(client);
-        var dislikedVideosExternal = await _fetchYoutubeDataService.FetchExternalDislikedVideos(
-            client
+        var notFoundVideos = TryGetThrow(
+            await _processYoutubeDataService.InternalVideosNotFound(externalVideos)
         );
 
-        if (!likedVideosExternal.Success || !dislikedVideosExternal.Success)
-            throw new Exception("Failed to fetch videos from youtube");
+        var videoChannels = await SyncVideoContentCreatorChannels(notFoundVideos, client);
 
-        if (likedVideosExternal.Data.items.Count != 0)
+        var videosToInsert = _processYoutubeDataService
+            .MapVideoResourceToModel(notFoundVideos, videoChannels)
+            .Data;
+
+        await _storeYoutubeDataService.StoreVideos(videosToInsert);
+    }
+
+    private async Task SyncLikedAndDislikedVideos(User user, YoutubeAPIClient client)
+    {
+        UpdateUserDto updateUserDto = new() { UserId = user.UserId };
+
+        foreach (var rating in new Rating[] { Rating.Dislike, Rating.Like })
         {
-            var notFoundLikedVideos = await _processYoutubeDataService.InternalVideosNotFound(
-                likedVideosExternal.Data.items
+            string internalEtag =
+                (rating == Rating.Like) ? user.LikedVideosEtag : user.DislikedVideosEtag;
+
+            var (ratedVideosExternal, externalEtag) = TryGetThrow(
+                await _fetchYoutubeDataService.FetchExternalRatedVideos(
+                    client,
+                    rating,
+                    internalEtag
+                )
             );
-            if (!notFoundLikedVideos.Success)
-                throw new Exception("Something went wrong");
+            if (internalEtag == externalEtag)
+                continue;
 
-            if (notFoundLikedVideos.Data.Count > 0)
+            await ImportNonInternalVideos(ratedVideosExternal, client);
+
+            var allExternalRatedVideoIds = ratedVideosExternal.Select(x => x.id).ToList();
+
+            if (rating == Rating.Dislike)
             {
-                var likedVideoChannels = await SyncVideoContentCreatorChannels(
-                    notFoundLikedVideos.Data,
-                    client
+                updateUserDto.DislikedVideosEtag = externalEtag;
+                updateUserDto.DislikedVideos = TryGetThrow(
+                    await _videoService.GetVideos(allExternalRatedVideoIds),
+                    "Failed to fetch videos from db"
                 );
-
-                var likedVideosToInsert = _processYoutubeDataService
-                    .MapVideoResourceToModel(notFoundLikedVideos.Data, likedVideoChannels)
-                    .Data;
-
-                await _storeYoutubeDataService.StoreVideos(likedVideosToInsert);
             }
-
-            var allExternalLikedVideoIds = likedVideosExternal.Data.items
-                .Select(x => x.id)
-                .ToList();
-
-            var allExternalLikedVideos = await _videoService.GetVideos(allExternalLikedVideoIds);
-
-            if (!allExternalLikedVideos.Success)
-                throw new Exception("Failed to fetch videos from db");
-
-            updateUserDto.LikedVideos = allExternalLikedVideos.Data;
+            if (rating == Rating.Like)
+            {
+                updateUserDto.LikedVideosEtag = externalEtag;
+                updateUserDto.LikedVideos = TryGetThrow(
+                    await _videoService.GetVideos(allExternalRatedVideoIds),
+                    "Failed to fetch videos from db"
+                );
+            }
         }
 
-        if (dislikedVideosExternal.Data.items.Count != 0)
-        {
-            var notFoundDislikedVideos = await _processYoutubeDataService.InternalVideosNotFound(
-                dislikedVideosExternal.Data.items
-            );
-            if (!notFoundDislikedVideos.Success)
-                throw new Exception("Something went wrong");
-
-            if (notFoundDislikedVideos.Data.Count > 0)
-            {
-                var dislikedVideoChannels = await SyncVideoContentCreatorChannels(
-                    notFoundDislikedVideos.Data,
-                    client
-                );
-
-                var dislikedVideosToInsert = _processYoutubeDataService
-                    .MapVideoResourceToModel(notFoundDislikedVideos.Data, dislikedVideoChannels)
-                    .Data;
-
-                await _storeYoutubeDataService.StoreVideos(dislikedVideosToInsert);
-            }
-
-            var allExternalDislikedVideoIds = dislikedVideosExternal.Data.items
-                .Select(x => x.id)
-                .ToList();
-
-            var allExternalDislikedVideos = await _videoService.GetVideos(
-                allExternalDislikedVideoIds
-            );
-
-            if (!allExternalDislikedVideos.Success)
-                throw new Exception("Failed to fetch videos from db");
-
-            updateUserDto.DislikedVideos = allExternalDislikedVideos.Data;
-        }
-
-        updateUserDto.LikedVideosEtag = likedVideosExternal.Data.etag;
-        updateUserDto.DislikedVideosEtag = dislikedVideosExternal.Data.etag;
         updateUserDto.UpdatedAt = DateTime.Now;
-
         await _userService.UpdateUser(updateUserDto);
     }
 }
-
-//TODO UPDATE API CLIENT TO TAKE ETAG, REMOVE STATISTIC WHERE NOT NEEDED

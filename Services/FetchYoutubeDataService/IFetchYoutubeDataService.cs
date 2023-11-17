@@ -17,13 +17,21 @@ public interface IFetchYoutubeDataService
 
     Task<ServiceResponse<List<Resource>>> FetchChannels(
         YoutubeAPIClient client,
-        List<Channel> channelsToUpdate
+        List<string> channelIds
     );
 
-    Task<ServiceResponse<(List<Resource> items, string etag)>> FetchExternalLikedVideos(
-        YoutubeAPIClient client
+    Task<ServiceResponse<(List<Resource> items, string etag)>> FetchSubscriptions(
+        YoutubeAPIClient client,
+        string internalEtag
     );
-    Task<ServiceResponse<(List<Resource> items, string etag)>> FetchExternalDislikedVideos(
-        YoutubeAPIClient client
+
+    Task<ServiceResponse<(List<Resource> items, string etag)>> FetchExternalRatedVideos(
+        YoutubeAPIClient client,
+        YoutubeAPIClient.Rating rating,
+        string internalEtag
+    );
+    Task<ServiceResponse<List<Resource>>> FetchVideos(
+        YoutubeAPIClient client,
+        List<string> videoIds
     );
 }

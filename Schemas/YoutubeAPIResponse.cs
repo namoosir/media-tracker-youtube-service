@@ -40,17 +40,16 @@ public class ContentDetails
 
 public class Statistics
 {
-    public int? viewCount { get; set; }
+    public long? viewCount { get; set; }
 
-    // Videos Specific
-    public int? likeCount { get; set; }
-    public int? commentCount { get; set; }
-    public int? favoriteCount { get; set; }
+    // Video Specific
+    public long? likeCount { get; set; }
+    public long? commentCount { get; set; }
 
     // Channels
-    public int? subscriberCount { get; set; }
+    public long? subscriberCount { get; set; }
     public bool? hiddenSubscriberCount { get; set; }
-    public int? videoCount { get; set; }
+    public long? videoCount { get; set; }
 }
 
 public class Snippet
