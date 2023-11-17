@@ -255,7 +255,7 @@ public class DataSynchronizationService : IDataSynchronizationService
         if (videosExternal[0].snippet.videoOwnerChannelId is null)
         {
             channelsExternal = videosExternal
-                .Select(v => (v.snippet.channelId, v.snippet.title))
+                .Select(v => (v.snippet.channelId, v.snippet.channelTitle))
                 .Distinct()
                 .ToList();
         }

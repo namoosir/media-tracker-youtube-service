@@ -60,6 +60,8 @@ public class Snippet
 
     public string? channelId { get; set; }
 
+    public string? channelTitle { get; set; }
+
     public string? videoOwnerChannelId { get; set; }
 
     public string? videoOwnerChannelTitle { get; set; }
