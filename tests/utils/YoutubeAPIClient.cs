@@ -4,10 +4,12 @@ using MediaTrackerYoutubeService.Utils.Youtube;
 using MediaTrackerYoutubeService.Schemas;
 
 namespace MediaTrackerYoutubeService.Tests.Utils;
+
 [TestClass]
 public class YoutubeAPIClientTests
 {
-    private const string BearerToken = "ya29.a0AfB_byD6aXKmdp1ucFvLdIwqo09nsTXs7aR-NM-PFe19no8qCE3NHQLTVM6b5cFq-Xraku9153fnS63_kGsROcu22VqV48YHtFN60lLvRp8OP0fSDpI99HsfeAxGXqpPTJvLI3zxLqFD-KhtPtXRuk9srMvB90pg2grTaCgYKAbcSARASFQGOcNnCCB-nQcRSg14VWhoaKXxaGg0171";
+    private const string BearerToken =
+        "ya29.a0AfB_byD6aXKmdp1ucFvLdIwqo09nsTXs7aR-NM-PFe19no8qCE3NHQLTVM6b5cFq-Xraku9153fnS63_kGsROcu22VqV48YHtFN60lLvRp8OP0fSDpI99HsfeAxGXqpPTJvLI3zxLqFD-KhtPtXRuk9srMvB90pg2grTaCgYKAbcSARASFQGOcNnCCB-nQcRSg14VWhoaKXxaGg0171";
     private const string ApiKey = "AIzaSyCJ5a1wgdnM2RCSGybxP8bv-osZHziwNIA";
 
     [TestMethod]
@@ -25,7 +27,10 @@ public class YoutubeAPIClientTests
     {
         YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
 
-        YoutubeAPIResponse response = await client.GetRatedVideos(YoutubeAPIClient.Rating.Like, "CGQQAA");
+        YoutubeAPIResponse response = await client.GetRatedVideos(
+            YoutubeAPIClient.Rating.Like,
+            "CGQQAA"
+        );
 
         Assert.IsNotNull(response);
     }
@@ -35,7 +40,7 @@ public class YoutubeAPIClientTests
     {
         YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
 
-        YoutubeAPIResponse response = await client.GetMyPlaylists();
+        YoutubeAPIResponse response = await client.GetMyPlaylists("S");
 
         Assert.IsNotNull(response);
     }
@@ -45,7 +50,9 @@ public class YoutubeAPIClientTests
     {
         YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
 
-        YoutubeAPIResponse response = await client.GetMyPlaylistItems("PLBiSPTHLp980MPLjeaenyI_fo-VawsFwO");
+        YoutubeAPIResponse response = await client.GetMyPlaylistItems(
+            "PLBiSPTHLp980MPLjeaenyI_fo-VawsFwO"
+        );
 
         Assert.IsNotNull(response);
     }
@@ -65,7 +72,14 @@ public class YoutubeAPIClientTests
     {
         YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
 
-        YoutubeAPIResponse response = await client.GetChannels(new List<string>{"UCrTW8WZTlOZMvvn_pl1Lpsg","UCmDTrq0LNgPodDOFZiSbsww","UCRD2CerUvgKHQ"});
+        YoutubeAPIResponse response = await client.GetChannels(
+            new List<string>
+            {
+                "UCrTW8WZTlOZMvvn_pl1Lpsg",
+                "UCmDTrq0LNgPodDOFZiSbsww",
+                "UCRD2CerUvgKHQ"
+            }
+        );
 
         Assert.IsNotNull(response);
     }
@@ -75,8 +89,10 @@ public class YoutubeAPIClientTests
     {
         YoutubeAPIClient client = new YoutubeAPIClient(BearerToken, ApiKey);
 
-        YoutubeAPIResponse response = await client.GetVideos(new List<string>{"i3AkTO9HLXo","coFIEH3vXPw","m_MQYyJpIjg"});
+        YoutubeAPIResponse response = await client.GetVideos(
+            new List<string> { "i3AkTO9HLXo", "coFIEH3vXPw", "m_MQYyJpIjg" }
+        );
 
         Assert.IsNotNull(response);
-    }    
+    }
 }

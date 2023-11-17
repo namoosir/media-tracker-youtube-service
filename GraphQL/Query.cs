@@ -3,7 +3,6 @@ using MediaTrackerYoutubeService.Controllers;
 using MediaTrackerYoutubeService.Data;
 using MediaTrackerYoutubeService.Models;
 
-
 namespace MediaTrackerYoutubeService.GraphQL
 {
     public class Query
@@ -13,9 +12,7 @@ namespace MediaTrackerYoutubeService.GraphQL
         [UseProjection]
         [UseFiltering]
         [UseSorting]
-        public IQueryable<User> GetUser(
-            [ScopedService] AppDbContext context
-        )
+        public IQueryable<User> GetUser([ScopedService] AppDbContext context)
         {
             return context.Users;
         }

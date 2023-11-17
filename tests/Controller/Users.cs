@@ -12,11 +12,14 @@ public class GraphQLTests
 
     public GraphQLTests()
     {
-        _client = new GraphQLHttpClient(new GraphQLHttpClientOptions
-        {
-            EndPoint = new Uri("http://localhost:5097/graphql"), // Your GraphQL endpoint
-            HttpMessageHandler = new HttpClientHandler()
-        }, new NewtonsoftJsonSerializer());
+        _client = new GraphQLHttpClient(
+            new GraphQLHttpClientOptions
+            {
+                EndPoint = new Uri("http://localhost:5097/graphql"), // Your GraphQL endpoint
+                HttpMessageHandler = new HttpClientHandler()
+            },
+            new NewtonsoftJsonSerializer()
+        );
     }
 
     [TestMethod]
@@ -24,7 +27,8 @@ public class GraphQLTests
     {
         var query = new GraphQLRequest
         {
-            Query = @"
+            Query =
+                @"
                 query {
                 user(where: {userId: {eq: 'hbgfjbdvjgfh'}}){
                     nodes {
@@ -48,7 +52,8 @@ public class GraphQLTests
     {
         var query = new GraphQLRequest
         {
-            Query = @"
+            Query =
+                @"
                 query {
                     post(id: 1) {
                         id

@@ -6,11 +6,8 @@ using HotChocolate;
 public class BaseEntity
 {
     [GraphQLDescription("Created at this timestamp.")]
-    public required DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     [GraphQLDescription("Last updated at this timestamp.")]
-    public required DateTime UpdatedAt { get; set; }
-
-    // [GraphQLDescription("Youtube Hash.")]
-    // public required string Etag { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }

@@ -4,6 +4,7 @@ using MediaTrackerYoutubeService.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediaTrackerYoutubeService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231110210125_AddedTitleToPlaylistsAndVideos")]
+    partial class AddedTitleToPlaylistsAndVideos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,7 +40,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("UserSubscribersUserId");
 
-                    b.ToTable("ChannelUser", (string)null);
+                    b.ToTable("ChannelUser");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Channel", b =>
@@ -51,9 +54,6 @@ namespace MediaTrackerYoutubeService.Migrations
                     b.Property<string>("ETag")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Imported")
-                        .HasColumnType("bit");
 
                     b.Property<int?>("SubscriberCount")
                         .HasColumnType("int");
@@ -76,7 +76,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasKey("YoutubeId");
 
-                    b.ToTable("Channels", (string)null);
+                    b.ToTable("Channels");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Playlist", b =>
@@ -105,7 +105,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Playlists", (string)null);
+                    b.ToTable("Playlists");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.User", b =>
@@ -116,24 +116,12 @@ namespace MediaTrackerYoutubeService.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DislikedVideosEtag")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LikedVideosEtag")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PlaylistsEtag")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("UserId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Video", b =>
@@ -153,9 +141,6 @@ namespace MediaTrackerYoutubeService.Migrations
                     b.Property<string>("ETag")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Imported")
-                        .HasColumnType("bit");
 
                     b.Property<int?>("LikeCount")
                         .HasColumnType("int");
@@ -178,7 +163,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("ChannelYoutubeId");
 
-                    b.ToTable("Videos", (string)null);
+                    b.ToTable("Videos");
                 });
 
             modelBuilder.Entity("PlaylistVideo", b =>
@@ -193,37 +178,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("VideosYoutubeId");
 
-                    b.ToTable("PlaylistVideo", (string)null);
-                });
-
-            modelBuilder.Entity("UserVideo", b =>
-                {
-                    b.Property<int>("LikedByUsersUserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("LikedVideosYoutubeId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("LikedByUsersUserId", "LikedVideosYoutubeId");
-
-                    b.HasIndex("LikedVideosYoutubeId");
-
-                    b.ToTable("UserVideo", (string)null);
-                });
-
-            modelBuilder.Entity("UserVideo1", b =>
-                {
-                    b.Property<int>("DislikedByUsersUserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("DislikedVideosYoutubeId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("DislikedByUsersUserId", "DislikedVideosYoutubeId");
-
-                    b.HasIndex("DislikedVideosYoutubeId");
-
-                    b.ToTable("UserVideo1", (string)null);
+                    b.ToTable("PlaylistVideo");
                 });
 
             modelBuilder.Entity("ChannelUser", b =>
@@ -272,36 +227,6 @@ namespace MediaTrackerYoutubeService.Migrations
                     b.HasOne("MediaTrackerYoutubeService.Models.Video", null)
                         .WithMany()
                         .HasForeignKey("VideosYoutubeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("UserVideo", b =>
-                {
-                    b.HasOne("MediaTrackerYoutubeService.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("LikedByUsersUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MediaTrackerYoutubeService.Models.Video", null)
-                        .WithMany()
-                        .HasForeignKey("LikedVideosYoutubeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("UserVideo1", b =>
-                {
-                    b.HasOne("MediaTrackerYoutubeService.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("DislikedByUsersUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MediaTrackerYoutubeService.Models.Video", null)
-                        .WithMany()
-                        .HasForeignKey("DislikedVideosYoutubeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

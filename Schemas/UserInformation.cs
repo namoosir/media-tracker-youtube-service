@@ -1,4 +1,5 @@
 namespace MediaTrackerYoutubeService.Schemas;
+
 public class UserInformation
 {
     public required string Token { get; set; }
@@ -6,11 +7,7 @@ public class UserInformation
 
     public static UserInformation Build(string token, int userId)
     {
-        var userInformation = new UserInformation
-        {
-            Token = token,
-            UserId = userId
-        };
+        var userInformation = new UserInformation { Token = token, UserId = userId };
         return userInformation;
     }
 }

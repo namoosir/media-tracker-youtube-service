@@ -1,40 +1,53 @@
 using MediaTrackerYoutubeService.Data;
 using MediaTrackerYoutubeService.Models;
+using MediaTrackerYoutubeService.Services.PlaylistService;
+using MediaTrackerYoutubeService.Services.ChannelService;
 using Microsoft.EntityFrameworkCore;
+using MediaTrackerYoutubeService.Services.VideoService;
 
 namespace MediaTrackerYoutubeService.Services.StoreYoutubeDataService;
 
 public class StoreYoutubeDataService : IStoreYoutubeDataService
 {
-    private readonly IDbContextFactory<AppDbContext> _contextFactory;
+    private readonly IPlaylistService _playlistService;
+    private readonly IChannelService _channelService;
+    private readonly IVideoService _videoService;
 
-    public StoreYoutubeDataService(IDbContextFactory<AppDbContext> contextFactory)
+    public StoreYoutubeDataService(
+        IPlaylistService playlistService,
+        IChannelService channelService,
+        IVideoService videoService
+    )
     {
-        _contextFactory = contextFactory;
+        _playlistService = playlistService;
+        _channelService = channelService;
+        _videoService = videoService;
     }
 
-    // public async Task<ServiceResponse<string>> StoreYoutubeData(List<UserVideo> userVideos)
-    // {
-    //     var serviceResponse = new ServiceResponse<string>();
-    //     try
-    //     {
-    //         using (var dbContext = _contextFactory.CreateDbContext())
-    //         {
-    //             foreach (UserVideo userVideo in userVideos)
-    //             {
-    //                 dbContext.UserVideos.Add(userVideo);
-    //             }
-    //             await dbContext.SaveChangesAsync();
-    //         }
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         serviceResponse.Data = "Something went wrong";
-    //         serviceResponse.Success = false;
-    //         serviceResponse.Message = e.Message;
-    //         return serviceResponse;
-    //     }
-    //     serviceResponse.Data = "Success!";
-    //     return serviceResponse;
-    // }
+    public async Task<ServiceResponse<string>> StorePlaylists(List<Playlist> playlistsToInsert)
+    {
+        var response = ServiceResponse<string>.Build("", true, null);
+        if (!(await _playlistService.AddPlaylist(playlistsToInsert)).Success)
+            response.Success = false;
+
+        return response;
+    }
+
+    public async Task<ServiceResponse<string>> StoreChannels(List<Channel> channelsToInsert)
+    {
+        var response = ServiceResponse<string>.Build("", true, null);
+        if (!(await _channelService.AddChannel(channelsToInsert)).Success)
+            response.Success = false;
+
+        return response;
+    }
+
+    public async Task<ServiceResponse<string>> StoreVideos(List<Video> videosToInsert)
+    {
+        var response = ServiceResponse<string>.Build("", true, null);
+        if (!(await _videoService.AddVideo(videosToInsert)).Success)
+            response.Success = false;
+
+        return response;
+    }
 }
