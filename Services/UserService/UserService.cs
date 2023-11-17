@@ -3,6 +3,7 @@ using MediaTrackerYoutubeService.Models;
 using MediaTrackerYoutubeService.Data;
 using Microsoft.EntityFrameworkCore;
 using MediaTrackerYoutubeService.Dtos.User;
+using MediaTrackerYoutubeService.Services.Utils;
 
 namespace MediaTrackerYoutubeService.Services.UserService;
 
@@ -87,29 +88,43 @@ public class UserService : IUserService
         return serviceResponse;
     }
 
-    public async Task<ServiceResponse<User>> UpdateUser(User user)
+    public async Task<ServiceResponse<User>> UpdateUser(UpdateUserDto updateUser)
     {
         var serviceResponse = new ServiceResponse<User>();
         try
         {
-            var found = await _context.Users.FirstOrDefaultAsync(u => u.UserId == user.UserId);
+            var found = await _context.Users.FirstOrDefaultAsync(
+                u => u.UserId == updateUser.UserId
+            );
             if (found == null)
                 throw new Exception("User doesn't exist");
 
-            // found.SubscribedChannels.Clear();
-            found.SubscribedChannels = user.SubscribedChannels;
+            if (updateUser.PlaylistsEtag != null)
+                found.PlaylistsEtag = updateUser.PlaylistsEtag;
+            if (updateUser.LikedVideosEtag != null)
+                found.LikedVideosEtag = updateUser.LikedVideosEtag;
+            if (updateUser.DislikedVideosEtag != null)
+                found.DislikedVideosEtag = updateUser.DislikedVideosEtag;
+            if (updateUser.UpdatedAt != null)
+                found.UpdatedAt = (DateTime)updateUser.UpdatedAt;
 
-            // found.VideoPlaylists.Clear();
-            found.VideoPlaylists = user.VideoPlaylists;
-            found.PlaylistsEtag = user.PlaylistsEtag;
-
-            // found.LikedVideos.Clear();
-            found.LikedVideos = user.LikedVideos;
-            found.LikedVideosEtag = user.LikedVideosEtag;
-
-            // found.DislikedVideos.Clear();
-            found.DislikedVideos = user.DislikedVideos;
-            found.DislikedVideosEtag = user.DislikedVideosEtag;
+            if (updateUser.LikedVideos != null)
+                UpdateRelationships.UpdateCollection(found.LikedVideos, updateUser.LikedVideos);
+            if (updateUser.DislikedVideos != null)
+                UpdateRelationships.UpdateCollection(
+                    found.DislikedVideos,
+                    updateUser.DislikedVideos
+                );
+            if (updateUser.SubscribedChannels != null)
+                UpdateRelationships.UpdateCollection(
+                    found.SubscribedChannels,
+                    updateUser.SubscribedChannels
+                );
+            if (updateUser.VideoPlaylists != null)
+                UpdateRelationships.UpdateCollection(
+                    found.VideoPlaylists,
+                    updateUser.VideoPlaylists
+                );
 
             await _context.SaveChangesAsync();
 

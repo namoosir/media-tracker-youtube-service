@@ -93,6 +93,7 @@ public class ChannelService : IChannelService
                 foundChannel.VideoCount = channel.VideoCount;
                 foundChannel.ThumbnailUrl = channel.ThumbnailUrl;
                 foundChannel.ETag = channel.ETag;
+                foundChannel.Imported = channel.Imported;
 
                 await _context.SaveChangesAsync();
             }

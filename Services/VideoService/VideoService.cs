@@ -67,11 +67,13 @@ public class VideoService : IVideoService
                     );
                 }
 
+                foundVideo.Title = video.Title;
                 foundVideo.ViewCount = video.ViewCount;
                 foundVideo.LikeCount = video.LikeCount;
                 foundVideo.CommentCount = video.CommentCount;
                 foundVideo.ThumbnailUrl = video.ThumbnailUrl;
                 foundVideo.ETag = video.ETag;
+                foundVideo.Imported = video.Imported;
 
                 await _context.SaveChangesAsync();
             }
