@@ -19,13 +19,13 @@ namespace MediaTrackerYoutubeService.Models
         public virtual required ICollection<Playlist> Playlist { get; set; }
 
         [GraphQLDescription("The number of views this video has received")]
-        public int? ViewCount { get; set; }
+        public long? ViewCount { get; set; }
 
         [GraphQLDescription("The number of likes this video has received")]
-        public int? LikeCount { get; set; }
+        public long? LikeCount { get; set; }
 
         [GraphQLDescription("The number of comments posted on this video")]
-        public int? CommentCount { get; set; }
+        public long? CommentCount { get; set; }
 
         [GraphQLDescription("URL of the video's thumbnail image")]
         public required string ThumbnailUrl { get; set; }

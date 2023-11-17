@@ -4,6 +4,7 @@ using MediaTrackerYoutubeService.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediaTrackerYoutubeService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231117175253_AddedSubscriptionsEtagForUser")]
+    partial class AddedSubscriptionsEtagForUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,7 +40,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("UserSubscribersUserId");
 
-                    b.ToTable("ChannelUser", (string)null);
+                    b.ToTable("ChannelUser");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Channel", b =>
@@ -55,8 +58,8 @@ namespace MediaTrackerYoutubeService.Migrations
                     b.Property<bool>("Imported")
                         .HasColumnType("bit");
 
-                    b.Property<long?>("SubscriberCount")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("SubscriberCount")
+                        .HasColumnType("int");
 
                     b.Property<string>("ThumbnailUrl")
                         .HasColumnType("nvarchar(max)");
@@ -68,15 +71,15 @@ namespace MediaTrackerYoutubeService.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long?>("VideoCount")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("VideoCount")
+                        .HasColumnType("int");
 
-                    b.Property<long?>("ViewCount")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("ViewCount")
+                        .HasColumnType("int");
 
                     b.HasKey("YoutubeId");
 
-                    b.ToTable("Channels", (string)null);
+                    b.ToTable("Channels");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Playlist", b =>
@@ -105,7 +108,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Playlists", (string)null);
+                    b.ToTable("Playlists");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.User", b =>
@@ -137,7 +140,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("MediaTrackerYoutubeService.Models.Video", b =>
@@ -148,8 +151,8 @@ namespace MediaTrackerYoutubeService.Migrations
                     b.Property<string>("ChannelYoutubeId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<long?>("CommentCount")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("CommentCount")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -161,8 +164,8 @@ namespace MediaTrackerYoutubeService.Migrations
                     b.Property<bool>("Imported")
                         .HasColumnType("bit");
 
-                    b.Property<long?>("LikeCount")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("LikeCount")
+                        .HasColumnType("int");
 
                     b.Property<string>("ThumbnailUrl")
                         .IsRequired()
@@ -175,14 +178,14 @@ namespace MediaTrackerYoutubeService.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long?>("ViewCount")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("ViewCount")
+                        .HasColumnType("int");
 
                     b.HasKey("YoutubeId");
 
                     b.HasIndex("ChannelYoutubeId");
 
-                    b.ToTable("Videos", (string)null);
+                    b.ToTable("Videos");
                 });
 
             modelBuilder.Entity("PlaylistVideo", b =>
@@ -197,7 +200,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("VideosYoutubeId");
 
-                    b.ToTable("PlaylistVideo", (string)null);
+                    b.ToTable("PlaylistVideo");
                 });
 
             modelBuilder.Entity("UserVideo", b =>
@@ -212,7 +215,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("LikedVideosYoutubeId");
 
-                    b.ToTable("UserVideo", (string)null);
+                    b.ToTable("UserVideo");
                 });
 
             modelBuilder.Entity("UserVideo1", b =>
@@ -227,7 +230,7 @@ namespace MediaTrackerYoutubeService.Migrations
 
                     b.HasIndex("DislikedVideosYoutubeId");
 
-                    b.ToTable("UserVideo1", (string)null);
+                    b.ToTable("UserVideo1");
                 });
 
             modelBuilder.Entity("ChannelUser", b =>

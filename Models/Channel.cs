@@ -19,13 +19,13 @@ namespace MediaTrackerYoutubeService.Models
         public virtual required ICollection<User> UserSubscribers { get; set; }
 
         [GraphQLDescription("The number of subscribers for this channel")]
-        public int? SubscriberCount { get; set; }
+        public long? SubscriberCount { get; set; }
 
         [GraphQLDescription("The total number of views for this channel's videos")]
-        public int? ViewCount { get; set; }
+        public long? ViewCount { get; set; }
 
         [GraphQLDescription("The total number of videos uploaded to this channel")]
-        public int? VideoCount { get; set; }
+        public long? VideoCount { get; set; }
 
         [GraphQLDescription("URL of the channel's thumbnail image")]
         public string? ThumbnailUrl { get; set; }

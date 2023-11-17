@@ -14,6 +14,9 @@ namespace MediaTrackerYoutubeService.Models
         [GraphQLDescription("Channels that the user is subscribed to")]
         public virtual required ICollection<Channel> SubscribedChannels { get; set; }
 
+        [GraphQLDescription("Channels created by the user (Etag)")]
+        public required string SubscriptionsEtag { get; set; }
+
         [GraphQLDescription("Video playlists created by the user")]
         public virtual required ICollection<Playlist> VideoPlaylists { get; set; }
 
