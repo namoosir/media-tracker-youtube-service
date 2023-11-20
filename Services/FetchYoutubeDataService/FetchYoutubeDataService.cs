@@ -162,7 +162,7 @@ public class FetchYoutubeDataService : IFetchYoutubeDataService
 
             while (SubscriptionsResponse.nextPageToken != null)
             {
-                SubscriptionsResponse = await client.GetMyPlaylistItems(
+                SubscriptionsResponse = await client.GetSubscriptions(
                     SubscriptionsResponse.nextPageToken
                 );
                 SubscriptionsExternal.AddRange(SubscriptionsResponse.items);

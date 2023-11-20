@@ -1,6 +1,7 @@
 using MediaTrackerYoutubeService.Data;
 using MediaTrackerYoutubeService.Dtos.Video;
 using MediaTrackerYoutubeService.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using static MediaTrackerYoutubeService.Constants;
 
@@ -36,8 +37,27 @@ public class VideoService : IVideoService
 
         try
         {
-            _context.Videos.AddRange(videos);
-            await _context.SaveChangesAsync();
+            foreach (var video in videos)
+            {
+                try
+                {
+                    _context.Videos.Add(video);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    if (
+                        ex.InnerException is SqlException sqlException
+                        && sqlException.Number == 2601
+                    )
+                    {
+                        Console.WriteLine("\n Duplicate Key Insert Error Occurred Video\n");
+                        continue;
+                    }
+
+                    throw;
+                }
+            }
 
             serviceResponse.Data = videos;
         }

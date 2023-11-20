@@ -1,6 +1,7 @@
 using MediaTrackerYoutubeService.Data;
 using MediaTrackerYoutubeService.Dtos.Channel;
 using MediaTrackerYoutubeService.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using static MediaTrackerYoutubeService.Constants;
 
@@ -50,14 +51,55 @@ public class ChannelService : IChannelService
         }
     }
 
+    // public async Task<ServiceResponse<List<Channel>>> AddChannel(List<Channel> channels)
+    // {
+    //     var serviceResponse = new ServiceResponse<List<Channel>>();
+
+    //     try
+    //     {
+    //         _context.Channels.AddRange(channels);
+    //         await _context.SaveChangesAsync();
+
+    //         serviceResponse.Data = channels;
+    //     }
+    //     catch (Exception e)
+    //     {
+
+    //         serviceResponse.Success = false;
+    //         serviceResponse.Message = e.Message;
+    //     }
+
+    //     return serviceResponse;
+    // }
+
     public async Task<ServiceResponse<List<Channel>>> AddChannel(List<Channel> channels)
     {
         var serviceResponse = new ServiceResponse<List<Channel>>();
 
         try
         {
-            _context.Channels.AddRange(channels);
-            await _context.SaveChangesAsync();
+            foreach (var channel in channels)
+            {
+                try
+                {
+                    _context.Channels.Add(channel);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    // Check if the exception is due to a duplicate key violation (unique constraint)
+                    if (
+                        ex.InnerException is SqlException sqlException
+                        && sqlException.Number == 2601
+                    )
+                    {
+                        Console.WriteLine("\n Duplicate Key Insert Error Occurred Channel\n");
+                        continue;
+                    }
+
+                    throw;
+                }
+            }
 
             serviceResponse.Data = channels;
         }

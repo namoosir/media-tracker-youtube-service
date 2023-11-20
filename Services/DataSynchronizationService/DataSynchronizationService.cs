@@ -72,16 +72,14 @@ public class DataSynchronizationService : IDataSynchronizationService
                 await _userService.UpsertUser(userId),
                 "Failed to add new user or confirm exisiting user"
             );
-            // //get user
 
-
-            // //check time
-            // if ((DateTime.Now - user.UpdatedAt).TotalMinutes < USER_REFRESH_DELAY)
-            // {
-            //     serviceResponse.Data = "Didn't perform sync, not enough time has passed since the last sync";
-            //     return serviceResponse;
-            // }
-
+            //check time
+            if ((DateTime.Now - user.UpdatedAt).TotalMinutes < USER_REFRESH_DELAY)
+            {
+                serviceResponse.Data =
+                    "Didn't perform sync, not enough time has passed since the last sync for the user";
+                return serviceResponse;
+            }
 
             var access_token = TryGetThrow(
                 await _authTokenExchangeService.YoutubeAuthTokenExchange(userId),
@@ -102,12 +100,15 @@ public class DataSynchronizationService : IDataSynchronizationService
             //     SyncLikedAndDislikedVideos(userId, client)
             // );
 
-            // await SyncSubscriptionsAndAssociatedChannels(user, client);
-            // await SyncPlaylistsAndAssociatedVideos(user, client);
-            // await SyncLikedAndDislikedVideos(user, client);
-            // await ImportPendingVideosAndChannelStatistics(client);
+            await SyncSubscriptionsAndAssociatedChannels(user, client);
+            await SyncPlaylistsAndAssociatedVideos(user, client);
+            await SyncLikedAndDislikedVideos(user, client);
+            await ImportPendingVideosAndChannelStatistics(client);
             await ImportVideoAndChannelStatistics(client);
-            // user.UpdateAt = DateNow
+
+            var userToUpdate = new UpdateUserDto { UserId = user.UserId, UpdatedAt = DateTime.Now };
+
+            await _userService.UpdateUser(userToUpdate);
 
             serviceResponse.Data = "Synced successfully!";
         }
@@ -133,7 +134,6 @@ public class DataSynchronizationService : IDataSynchronizationService
 
             var outOfDateVideos = TryGetThrow(await _videoService.GetOutOfDateVideos());
             var outOfDateChannels = TryGetThrow(await _channelService.GetOutOfDateChannels());
-            Console.WriteLine(outOfDateChannels.Count + "\n\n\n\n\nsdfds ");
             var externalOutOfDateVideos = TryGetThrow(
                 await _fetchYoutubeDataService.FetchVideos(client, outOfDateVideos)
             );
@@ -179,13 +179,6 @@ public class DataSynchronizationService : IDataSynchronizationService
                 channelsToUpdate.Add(channelDto);
             });
 
-            Console.WriteLine(
-                channelsToUpdate.Count
-                    + channelsToUpdate[0].Title
-                    + channelsToUpdate[0].ViewCount
-                    + "\n\n\n\n\nsdfds "
-            );
-
             await _videoService.UpdateVideo(videosToUpdate);
             await _channelService.UpdateChannel(channelsToUpdate);
 
@@ -195,7 +188,6 @@ public class DataSynchronizationService : IDataSynchronizationService
         {
             serviceResponse.Success = true;
             serviceResponse.Message = e.Message;
-            Console.WriteLine("ERROR " + e.Message);
         }
         return serviceResponse;
     }
@@ -204,7 +196,6 @@ public class DataSynchronizationService : IDataSynchronizationService
         YoutubeAPIClient client
     )
     {
-        Console.WriteLine("DSFJCKDSLKCMKLD\n\n\n\n");
         var serviceResponse = new ServiceResponse<string>();
 
         try
@@ -261,7 +252,6 @@ public class DataSynchronizationService : IDataSynchronizationService
                 };
                 channelsToUpdate.Add(channelDto);
             });
-            Console.WriteLine("dsfgsfdgf\n\n\n\n");
             await _videoService.UpdateVideo(videosToUpdate);
             await _channelService.UpdateChannel(channelsToUpdate);
 
@@ -271,7 +261,6 @@ public class DataSynchronizationService : IDataSynchronizationService
         {
             serviceResponse.Success = true;
             serviceResponse.Message = e.Message;
-            Console.WriteLine("ERROR " + e.Message);
         }
         return serviceResponse;
     }
@@ -387,11 +376,6 @@ public class DataSynchronizationService : IDataSynchronizationService
                 .Select(v => (v.snippet.videoOwnerChannelId, v.snippet.videoOwnerChannelTitle))
                 .Distinct()
                 .ToList();
-        }
-
-        foreach (var channel in channelsExternal)
-        {
-            Console.WriteLine("\n" + channel.channelId + "  dd   " + channel.channelTitle);
         }
 
         var channelsToInsert = TryGetThrow(

@@ -112,20 +112,12 @@ public class YoutubeAPIClient
 
     public async Task<YoutubeAPIResponse> GetMyPlaylists(string etag, string nextPageToken = null)
     {
-        _httpClient.DefaultRequestHeaders.IfNoneMatch.Clear();
-        if (etag != "")
-        {
-            // _httpClient.DefaultRequestHeaders.IfNoneMatch.Add(new EntityTagHeaderValue("\"" + etag + "\"", isWeak: true));
-            _httpClient.DefaultRequestHeaders.IfModifiedSince = DateTime.Now;
-        }
-
         HttpResponseMessage response = await _httpClient.GetAsync(
             _endpoints.Playlists(nextPageToken)
         );
 
         if (response.StatusCode == HttpStatusCode.NotModified)
         {
-            Console.WriteLine("\n\n\n\nBNMDIFED");
             return null;
         }
 
