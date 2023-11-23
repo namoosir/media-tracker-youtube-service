@@ -103,6 +103,10 @@ public class VideoService : IVideoService
                     foundVideo.ETag = video.ETag;
                 if (video.Imported != null)
                     foundVideo.Imported = (bool)video.Imported;
+                if (video.isShort != null)
+                    foundVideo.IsShort = (bool)video.isShort;
+                if (video.Category != null)
+                    foundVideo.Category = video.Category;
 
                 await _context.SaveChangesAsync();
                 serviceResponse.Data.Add(foundVideo);

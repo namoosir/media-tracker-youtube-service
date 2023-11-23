@@ -20,6 +20,7 @@ using MediaTrackerYoutubeService.Dtos.Video;
 using MediaTrackerYoutubeService.Dtos.Channel;
 using static MediaTrackerYoutubeService.Utils.Youtube.YoutubeAPIClient;
 using static MediaTrackerYoutubeService.Constants;
+using System.Xml;
 
 namespace MediaTrackerYoutubeService.Services.DataSynchronizationService;
 
@@ -68,18 +69,22 @@ public class DataSynchronizationService : IDataSynchronizationService
 
         try
         {
+            var userResponse = await _userService.GetUser(userId);
+            var isNewUser =
+                userResponse.Message == $"No user with id {userId} exists" ? true : false;
+
             User user = TryGetThrow(
                 await _userService.UpsertUser(userId),
                 "Failed to add new user or confirm exisiting user"
             );
 
             //check time
-            if ((DateTime.Now - user.UpdatedAt).TotalMinutes < USER_REFRESH_DELAY)
-            {
-                serviceResponse.Data =
-                    "Didn't perform sync, not enough time has passed since the last sync for the user";
-                return serviceResponse;
-            }
+            // if (!isNewUser && (DateTime.Now - user.UpdatedAt).TotalMinutes < USER_REFRESH_DELAY)
+            // {
+            //     serviceResponse.Data =
+            //         "Didn't perform sync, not enough time has passed since the last sync for the user";
+            //     return serviceResponse;
+            // }
 
             var access_token = TryGetThrow(
                 await _authTokenExchangeService.YoutubeAuthTokenExchange(userId),
@@ -121,6 +126,49 @@ public class DataSynchronizationService : IDataSynchronizationService
         return serviceResponse;
     }
 
+    private bool CalculateIsShortStatus(string duationISO)
+    {
+        try
+        {
+            double durationSeconds = System.Xml.XmlConvert.ToTimeSpan(duationISO).TotalSeconds;
+            return durationSeconds <= 60;
+        }
+        catch (FormatException ex)
+        {
+            throw new Exception($"Error parsing ISO 8601 duration: {ex.Message}");
+        }
+    }
+
+    private string MappedCategory(int? categoryCode)
+    {
+        if (categoryCode == null)
+            return "";
+
+        return YoutubeResource.categoryIdMap.TryGetValue(categoryCode!.Value, out var category)
+            ? category
+            : null;
+    }
+
+    private List<string> ProcessChannelCategories(List<string> categoryLinks)
+    {
+        List<string> processedCategories = new List<string>();
+
+        foreach (var link in categoryLinks)
+        {
+            try
+            {
+                Uri uri = new Uri(link);
+                processedCategories.Add(uri.Segments.Last().Trim('/'));
+            }
+            catch (UriFormatException ex)
+            {
+                Console.WriteLine($"Error processing channel category link '{link}': {ex.Message}");
+            }
+        }
+
+        return processedCategories;
+    }
+
     public async Task<ServiceResponse<string>> ImportVideoAndChannelStatistics(
         YoutubeAPIClient client
     )
@@ -152,6 +200,8 @@ public class DataSynchronizationService : IDataSynchronizationService
                 var resource = videoIdToResource[id];
                 var videoDto = new UpdateVideoDto
                 {
+                    Category = MappedCategory(resource.snippet.categoryId),
+                    isShort = CalculateIsShortStatus(resource.contentDetails.duration),
                     YoutubeId = id,
                     Title = resource.snippet.title,
                     ViewCount = resource.statistics.viewCount,
@@ -168,6 +218,7 @@ public class DataSynchronizationService : IDataSynchronizationService
                 var resource = channelIdToResource[id];
                 var channelDto = new UpdateChannelDto
                 {
+                    Categories = ProcessChannelCategories(resource.topicDetails.topicCategories),
                     YoutubeId = id,
                     Title = resource.snippet.title,
                     SubscriberCount = resource.statistics.subscriberCount,
@@ -186,6 +237,7 @@ public class DataSynchronizationService : IDataSynchronizationService
         }
         catch (Exception e)
         {
+            Console.WriteLine("EXCEPTION IMPORT" + e.Message);
             serviceResponse.Success = true;
             serviceResponse.Message = e.Message;
         }
@@ -226,6 +278,8 @@ public class DataSynchronizationService : IDataSynchronizationService
                 var resource = videoIdToResource[id];
                 var videoDto = new UpdateVideoDto
                 {
+                    Category = MappedCategory(resource.snippet.categoryId),
+                    isShort = CalculateIsShortStatus(resource.contentDetails.duration),
                     YoutubeId = id,
                     Title = resource.snippet.title,
                     ViewCount = resource.statistics.viewCount,
@@ -240,8 +294,11 @@ public class DataSynchronizationService : IDataSynchronizationService
             pendingChannels.ForEach(id =>
             {
                 var resource = channelIdToResource[id];
+                var topicDetail = resource.topicDetails;
+                var wikiCategoryLinks = topicDetail?.topicCategories ?? new List<string>();
                 var channelDto = new UpdateChannelDto
                 {
+                    Categories = ProcessChannelCategories(wikiCategoryLinks),
                     YoutubeId = id,
                     Title = resource.snippet.title,
                     SubscriberCount = resource.statistics.subscriberCount,
@@ -259,6 +316,7 @@ public class DataSynchronizationService : IDataSynchronizationService
         }
         catch (Exception e)
         {
+            Console.WriteLine("EXCEPTION Pending" + e.Message);
             serviceResponse.Success = true;
             serviceResponse.Message = e.Message;
         }

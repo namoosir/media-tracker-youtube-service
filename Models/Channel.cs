@@ -1,4 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
 
 namespace MediaTrackerYoutubeService.Models
 {
@@ -29,6 +33,17 @@ namespace MediaTrackerYoutubeService.Models
 
         [GraphQLDescription("URL of the channel's thumbnail image")]
         public string? ThumbnailUrl { get; set; }
+
+        [GraphQLDescription("Categories the channel falls under (Cooking, Gaming, etc)")]
+        [NotMapped]
+        public ICollection<string> Categories
+        {
+            get { return JsonSerializer.Deserialize<ICollection<string>>(CategoriesJson); }
+            set { CategoriesJson = JsonSerializer.Serialize(value); }
+        }
+
+        [Column("Categories")]
+        public string CategoriesJson { get; set; }
 
         // public required string ETag { get; set; }
 

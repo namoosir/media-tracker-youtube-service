@@ -30,12 +30,21 @@ public class Resource
     public Statistics? statistics { get; set; }
 
     public ContentDetails? contentDetails { get; set; }
+
+    public TopicDetails? topicDetails { get; set; }
 }
 
 // Only for PlaylistItems Endpoint
 public class ContentDetails
 {
     public required string videoId { get; set; }
+
+    public required string duration { get; set; }
+}
+
+public class TopicDetails
+{
+    public required List<string> topicCategories { get; set; }
 }
 
 public class Statistics
@@ -64,6 +73,8 @@ public class Snippet
     public string? videoOwnerChannelId { get; set; }
 
     public string? videoOwnerChannelTitle { get; set; }
+
+    public int? categoryId { get; set; }
 
     public Thumbnails? thumbnails { get; set; }
 

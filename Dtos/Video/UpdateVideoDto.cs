@@ -23,6 +23,10 @@ public class UpdateVideoDto
 
     public bool? Imported { get; set; }
 
+    public bool? isShort { get; set; }
+
+    public string? Category { get; set; }
+
     public ICollection<Models.User>? LikedByUsers { get; set; }
     public ICollection<Models.User>? DislikedByUsers { get; set; }
 }

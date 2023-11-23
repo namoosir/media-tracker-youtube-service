@@ -145,6 +145,8 @@ public class ChannelService : IChannelService
                     foundChannel.ETag = channel.ETag;
                 if (channel.Imported != null)
                     foundChannel.Imported = (bool)channel.Imported;
+                if (channel.Categories != null)
+                    foundChannel.Categories = channel.Categories;
 
                 await _context.SaveChangesAsync();
                 serviceResponse.Data.Add(foundChannel);

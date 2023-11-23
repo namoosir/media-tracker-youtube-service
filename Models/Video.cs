@@ -30,6 +30,12 @@ namespace MediaTrackerYoutubeService.Models
         [GraphQLDescription("URL of the video's thumbnail image")]
         public required string ThumbnailUrl { get; set; }
 
+        [GraphQLDescription("Categories this Video falls Under")]
+        public required string Category { get; set; }
+
+        [GraphQLDescription("Wether the Video is under a minute")]
+        public required bool IsShort { get; set; }
+
         // public required string ETag { get; set; }
 
         public required bool Imported { get; set; }

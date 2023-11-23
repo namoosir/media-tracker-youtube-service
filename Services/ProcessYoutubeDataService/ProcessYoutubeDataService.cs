@@ -76,6 +76,7 @@ public class ProcessYoutubeDataService : IProcessYoutubeDataService
 
                 var newChannel = new Channel
                 {
+                    Categories = new List<string>(),
                     YoutubeId = channel.channelId,
                     ETag = "",
                     Videos = new List<Video>(),
@@ -150,6 +151,8 @@ public class ProcessYoutubeDataService : IProcessYoutubeDataService
 
                 return new Video
                 {
+                    IsShort = false,
+                    Category = "",
                     Playlist = new List<Playlist>(),
                     Channel = contentCreatorChannelOfVideo,
                     YoutubeId = YouTubeId,

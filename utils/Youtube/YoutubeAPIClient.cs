@@ -97,7 +97,7 @@ public class YoutubeAPIClient
             YoutubeAPIUrlBuilder.Build(
                 YoutubeResource.Channels,
                 new Dictionary<string, string> { { "key", _apiKey } },
-                new List<string> { "snippet", "statistics" },
+                new List<string> { "snippet", "statistics", "topicDetails" },
                 channelIds
             );
 
@@ -105,7 +105,7 @@ public class YoutubeAPIClient
             YoutubeAPIUrlBuilder.Build(
                 YoutubeResource.Videos,
                 new Dictionary<string, string> { { "key", _apiKey } },
-                new List<string> { "snippet", "statistics" },
+                new List<string> { "snippet", "statistics", "contentDetails" },
                 videoIds
             );
     }

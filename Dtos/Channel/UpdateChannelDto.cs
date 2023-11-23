@@ -12,6 +12,8 @@ public class UpdateChannelDto
 
     public ICollection<Models.User>? UserSubscribers { get; set; }
 
+    public ICollection<string>? Categories { get; set; }
+
     public long? SubscriberCount { get; set; }
 
     public long? ViewCount { get; set; }
